@@ -79,7 +79,7 @@ for (c in 1){ #1:length(CBs)
     
     
     # must include the first time (negative length)
-    time.gaps   
+    time.gaps
     
     
     
