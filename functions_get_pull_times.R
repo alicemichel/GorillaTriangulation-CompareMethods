@@ -49,13 +49,31 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM=pam, clipLeng
 }
 
 
-clipFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLength=len){
+mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path="."){
   
   pam.1st.clip <- pullTime(clip.start, inPAMfile, getPAM, clipLength)
   first.file.start <- fullTimeFromClipStart(pam.1st.clip[[2]],0)
   first.clip.start <- fullTimeFromClipStart(pam.1st.clip[[2]],pam.1st.clip[[3]])
-  all.clip.starts <- c(first.clip.start, first.clip.start + gaps[-1])
+  all.clip.starts <- first.clip.start + gaps
   starts.in.fls <- all.clip.starts - first.file.start
+  
+  rems <- (starts.in.fls-3594.82)%/%3594.82 + 2
+  
+  list.files(path, pattern = "S20.*.wav")
+  kfls <- soundfiles[grep(paste0(getPAM,"_"), soundfiles)]
+  daytext = substr(kfls, start = 4, stop = 11) 
+  kfls = kfls[daytext == dateYYYYmmdd] # exclude other days -- could be a problem for midnight to 1am
+  kfls = kfls[nchar(kfls)==81] # exclude cut files from processing.
+  cat("note: files must have the format letter_file!")
+  
+  fls <- kfls[rems]
+  all.clip.starts1 <- all.clip.starts - fullTimeFromClipStart(fls,0)
+  
+  clps <- list()
+  for (i in 1:length(gaps)){
+    clps[[i]] <- read_wave(fls[i], from = all.clip.starts1[i], to = (all.clip.starts1[i] + len))
+  }
+  return(do.call(tuneR::bind, args = clps))
 }
 
 

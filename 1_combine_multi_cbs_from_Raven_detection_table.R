@@ -57,7 +57,7 @@ for (c in 1){ #1:length(CBs)
     (time.gaps[i] <- dets.key.pam[i+1,]$startClip - (first.clip.t.key + len) + clip.sound.path.key.next.start.gap.from.first)
   }
   CBs[[c]]$w.keypam <- do.call(tuneR::bind, args = wavs)
-  # viewSpec(w, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = duration(w))
+  viewSpec(CBs[[c]]$w.keypam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = length(CBs[[c]]$w.keypam)/CBs[[c]]$w.keypam@samp.rate)
   time.gaps <- c(0, time.gaps)[-(length(time.gaps)+1)]
   plot(time.gaps/60, 1:15, bty="l", las=1, type="l", lwd=2, xlab="Elapsed time (min)", ylab="Cumulative # chest beats")
   
@@ -79,8 +79,8 @@ for (c in 1){ #1:length(CBs)
     
     
     # must include the first time (negative length)
-    time.gaps
-    
+    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path=".")
+    viewSpec(CBs[[c]]$w.pam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = length(CBs[[c]]$w.pam)/CBs[[c]]$w.pam@samp.rate)
     
     
     
