@@ -80,31 +80,15 @@ for (c in 1){ #1:length(CBs)
     
     # must include the first time (negative length)
     CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path=".")
-    viewSpec(CBs[[c]]$w.pam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = length(CBs[[c]]$w.pam)/CBs[[c]]$w.pam@samp.rate)
+    viewSpec(CBs[[c]]$w.pam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = length(CBs[[c]]$w.pam)/CBs[[c]]$w.pam@samp.rate)
     
-    
-    
-    
-    
-    
+    ## need to incorporate selection of delay into the function! how to do... manual? tell it going into it?
     
     
     
     # get raw time, then find file within folder for that range, could be two in which case…skip but account for the gap…..paste in empty recording of same length of time from that pam/region. Ensure empty is issue 
     
-    
-    
-    
-    
-    
-    
-    wavs <- list()
-    for (i in 1:nrow(dets.pam)){
-      wavs[[i]] <- read_wave(dets.pam[i,]$sound.files, from = dets.pam[i,]$start.based.on.key, to = (dets.pam[i,]$start.based.on.key + len))
-    }
-    CBs[[c]]$w.pam[[pam]] <- do.call(bind, args = wavs)
-    # viewSpec(w.p, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = duration(w.p))
-    
+
   }
 }
 
