@@ -8,7 +8,7 @@ fullTimeFromClipStart <- function(sound.path, clip.start){
 pullTime <- function(clip.start, inPAMfile, getPAM, clipLength=len, plot=TRUE){
   fullTimeSecondsToGet <- fullTimeFromClipStart(sound.path = inPAMfile, clip.start = clip.start)
   dateYYYYmmdd <- substr(inPAMfile, start = 4, stop = 11)
-  return(pullFromPam(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path, plot))
+  return(pullFromPam(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path=".", plot))
 }
 
 
@@ -23,7 +23,7 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
   daytext = substr(kfls, start = 4, stop = 11) 
   kfls = kfls[daytext == dateYYYYmmdd] # exclude other days -- could be a problem for midnight to 1am
   kfls = kfls[nchar(kfls)==81] # exclude cut files from processing.
-  cat("note: files must have the format letter_file!")
+  # cat("note: files must have the format letter_file!")
   
   t1txt <- substr(kfls, start = 13, stop = 25) 
   t1s <- 3600*as.numeric(substr(t1txt, start = 1, stop = 2))+60*as.numeric(substr(t1txt, start = 3, stop = 4))+as.numeric(substr(t1txt, start = 5, stop = 15))
@@ -56,12 +56,21 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
   pam.1st.clip <- pullTime(clip.start, inPAMfile, getPAM, clipLength, plot=FALSE)
   first.file.start <- fullTimeFromClipStart(pam.1st.clip[[2]],0)
   first.clip.start <- fullTimeFromClipStart(pam.1st.clip[[2]],pam.1st.clip[[3]])
+  
+  ## NEED TO CORRECT FOR CLOCK DRIFT BASED ON TIME WITHIN EACH FILE FOR EACH FILE/PAM!
+  # add scalar to each item in the time.gaps vector...
+  
+  # first check if it's even a possible issue - what's the scale of the drift? and does it cummulate when you mush over 1+ hours?
+  
+  
   all.clip.starts <- first.clip.start + gaps
   starts.in.fls <- all.clip.starts - first.file.start
   
+  dateYYYYmmdd <- substr(inPAMfile, start = 4, stop = 11)
+  
   rems <- (starts.in.fls-3594.82)%/%3594.82 + 2
   
-  list.files(path, pattern = "S20.*.wav")
+  soundfiles=list.files(path, pattern = "S20.*.wav")
   kfls <- soundfiles[grep(paste0(getPAM,"_"), soundfiles)]
   daytext = substr(kfls, start = 4, stop = 11) 
   kfls = kfls[daytext == dateYYYYmmdd] # exclude other days -- could be a problem for midnight to 1am

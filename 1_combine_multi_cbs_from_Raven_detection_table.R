@@ -4,7 +4,10 @@ ogdir <- "~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeas
 setwd(ogdir)
 library(warbleR)
 library(monitoR)
-par(mfrow=c(2,1))
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_distance_calcs.R")
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_get_pull_times.R")
+
+par(mfrow=c(1,1))
 
 ## Strategy:
 
@@ -30,69 +33,85 @@ dets$startClip <- dets$startClip - buff
 inds <- unique(substr(dets$approxOrd, start = 1, stop = 1))[1:2]
 
 dets <- dets[dets$pam %in% c("J","H","Q","U"),] #for now, use 6 closest in future...within 2nd loop below
+pamID <- unique(dets$pam) # change to reflect sound files present in the folder
 
+len = 7
 
-pamID <- unique(dets$pam)
-
-len = 5.5
+printwindow = 40
 
 CBs <- as.list(inds)
 names(CBs) <- inds
 for (c in 1){ #1:length(CBs)
+  
+  ## isolate the detections of individual "c":
   detections.of.ind <- CBs[[c]]$detections <- dets[substr(dets$approxOrd, start = 1, stop = 1) == inds[c],]
   
-  ## pick 1 PAM and fix the time gaps based on ALL its detections. This is the PAM you should have the max number of detections for that individual.
-  key.pam <- names(CBs)[c]
+  ## pick 1 PAM and fix the time gaps based on ALL its detections. This is the PAM you should have the max number of detections for that individual:
+  key.pam <- names(CBs)[c] #here the CBs are handily named by the closest PAM
   dets.key.pam <- detections.of.ind[detections.of.ind$pam==key.pam,]
   
+  # Get the start time of the first detection within the file:
   first.clip.t.key <- dets.key.pam[1,]$startClip
+  # Get the file path:
   first.clip.sound.path.key <- dets.key.pam[1,]$sound.files
+  # Use the file path to know when the file actually starts since midnight the night before:
   first.clip.sound.path.key.start <- fullTimeFromClipStart(first.clip.sound.path.key,0)
   
+  # last file path (for double checking below):
+  last.clip.sound.path.key <- dets.key.pam[nrow(dets.key.pam),]$sound.files
+  ch <- ifelse(fullTimeFromClipStart(last.clip.sound.path.key,0) - first.clip.sound.path.key.start > 0, "all detections are before midnight", "you need to double check if the files got messed up by carrying over to the next day")
+  cat(ch)
+  
+  # Read in and combine waves
   wavs <- list()
   time.gaps <- vector()
   for (i in 1:nrow(dets.key.pam)){
     wavs[[i]] <- read_wave(dets.key.pam[i,]$sound.files, from = dets.key.pam[i,]$startClip, to = (dets.key.pam[i,]$startClip + len))
     clip.sound.path.key.next.start.gap.from.first <- fullTimeFromClipStart(dets.key.pam[i+1,]$sound.files,0) - first.clip.sound.path.key.start
-    (time.gaps[i] <- dets.key.pam[i+1,]$startClip - (first.clip.t.key + len) + clip.sound.path.key.next.start.gap.from.first)
+    (time.gaps[i] <- dets.key.pam[i+1,]$startClip - (first.clip.t.key) + clip.sound.path.key.next.start.gap.from.first)
   }
   CBs[[c]]$w.keypam <- do.call(tuneR::bind, args = wavs)
-  viewSpec(CBs[[c]]$w.keypam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = length(CBs[[c]]$w.keypam)/CBs[[c]]$w.keypam@samp.rate)
+  # Get the real-time start gaps between each detection on the key PAM:
   time.gaps <- c(0, time.gaps)[-(length(time.gaps)+1)]
+  
+  ## NEED TO CORRECT FOR CLOCK DRIFT BASED ON TIME WITHIN EACH FILE FOR EACH FILE/PAM!
+  # add scalar to each item in the time.gaps vector...
+  
+  
+  ## Plot the accumulation of CBs over time - interesting for plotting exchanges iff you select EVERY chest beat:
   plot(time.gaps/60, 1:15, bty="l", las=1, type="l", lwd=2, xlab="Elapsed time (min)", ylab="Cumulative # chest beats")
   
-  CBs[[c]]$w.pam <- list()
-  
-  # get 6 closest Pam’s to key Pam by distance
+  # get 6 closest Pam’s to key Pam by distance:
   (pamsToCheck <- pamNeighbors(key.pam, pam.xy, n=10, self=TRUE) )
-  (pamsToGet <-  pamsToCheck[pamsToCheck %in% pamID])
   
+  # of those, only those you have sound files for:
+  (pamsToGet <-  pamsToCheck[pamsToCheck %in% pamID]) #include key PAM as a check
+  
+  # loop through each PAM and add their amalgamated grabs from the same time period to the big list for this gorilla:
+  CBs[[c]]$w.pam <- list()
   for (pam in pamsToGet){ 
     
-    # first print the one you're aiming for
+    ## NEED TO CORRECT FOR CLOCK DRIFT BASED ON TIME WITHIN EACH FILE FOR EACH FILE/PAM!
+    # add scalar to each item in the time.gaps vector...
+    
+    
+    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".")
+    
+    ## Check using plots
     par(mfrow=c(2,1))
-    viewSpec(read_wave(inPAMfile, from = clip.start, to = clip.start + len), main = key.pam, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning")
-    # prints the clip and saves the clip starts/wave read in into a list
-    pam.clip <- pullTime(first.clip.t.key, first.clip.sound.path.key, pam, len) #change len if you have reason to believe they are very far apart
+    ## Amalgamated spectro in key PAM:
+    viewSpec(CBs[[c]]$w.keypam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = printwindow)
+    ## Amalgamated spectro in focal PAM:
+    viewSpec(CBs[[c]]$w.pam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = printwindow)
     
-    # now for the next ones need to check every start time and what file it falls in... or go up from the starting one? that makes more sense I think since then you won't lose if it loops over into the next day...if you play it right...
+    names(CBs[[c]])[names(CBs[[c]])=="w.pam"] <- paste0("w.",pam)
     
+    ## Alternatively could incorporate selection of delay into the function manually instead of wide length, but need to paste in emptiness and gets complicated
     
-    # must include the first time (negative length)
-    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path=".")
-    viewSpec(CBs[[c]]$w.pam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = length(CBs[[c]]$w.pam)/CBs[[c]]$w.pam@samp.rate)
-    
-    ## need to incorporate selection of delay into the function! how to do... manual? tell it going into it?
-    
-    
-    
-    # get raw time, then find file within folder for that range, could be two in which case…skip but account for the gap…..paste in empty recording of same length of time from that pam/region. Ensure empty is issue 
-    
-
   }
 }
 
-# writeWave(w.p, "testH.wav")
+# writeWave(..., "...wav")
 
 
 
