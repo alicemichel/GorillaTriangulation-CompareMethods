@@ -39,6 +39,8 @@ inds <- unique(substr(dets$approxOrd, start = 1, stop = 1))[1:2]
 dets <- dets[dets$pam %in% c("J","H","Q","U"),] #for now, use 6 closest in future...within 2nd loop below
 pamID <- unique(dets$pam) # change to reflect sound files present in the folder
 
+start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
+
 len = 7
 
 printwindow = 40
@@ -95,29 +97,42 @@ for (c in 1:length(CBs)){
     # Get start times data.frame within the focal PAM based on time gaps in the key PAM:
     CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".", keyPAMstarts4check = dets.key.pam$startClip, tabulate = TRUE, add=10)
     
-    plot.check = "NO"
-    
-    if (plot.check!="NO"){
-      ## Check using plots
-      par(mfrow=c(2,1))
-      ## Amalgamated spectro in key PAM:
-      viewSpec(CBs[[c]]$w.keypam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = printwindow)
-      ## Amalgamated spectro in focal PAM:
+    wave="sure"
+    if (wave != "NO"){
+      
       mergWvFoc <- df2mergedWav(df = CBs[[c]]$w.pam, clipLength=len)
-      viewSpec(mergWvFoc, interactive = F, start.time = len, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = printwindow)
+      
+      plot.check = "NO"
+      if (plot.check!="NO"){
+
+        par(mfrow=c(2,1))
+        ## Amalgamated spectro in key PAM:
+        viewSpec(CBs[[c]]$w.keypam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = printwindow)
+        ## Amalgamated spectro in focal PAM:
+        viewSpec(mergWvFoc, interactive = F, start.time = len, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = printwindow)
+      }
     }
     
     names(CBs[[c]])[names(CBs[[c]])=="w.pam"] <- paste0("w.",pam)
     
-    ## Alternatively could incorporate selection of delay into the function manually instead of wide length, but need to paste in emptiness and gets complicated
+    writeWave(mergWvFoc, paste0("merged_", start.date, "_ind_", names(CBs)[c], "_on_", pam, ".wav"))
+    
   }
-  
   
 }
 
-# writeWave(..., "...wav")
+
 
 
 
 # for cross-correlation, this may be way too much data... python? or
-# cut off the amplitude to low (not 0) up to the start of the clipped clip per each pam
+# cut off the amplitude to low (not 0) up to the start of the clipped clip per each pam...still minutes of data...
+## Alternatively could incorporate selection of delay into the function manually instead of wide length, but need to paste in emptiness and gets complicated
+
+
+
+
+
+
+
+
