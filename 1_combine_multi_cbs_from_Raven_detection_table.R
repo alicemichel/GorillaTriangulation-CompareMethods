@@ -45,7 +45,8 @@ printwindow = 40
 
 CBs <- as.list(inds)
 names(CBs) <- inds
-for (c in 1){ #1:length(CBs)
+par(mfrow=c(length(inds),1))
+for (c in 1:length(CBs)){ 
   
   ## isolate the detections of individual "c":
   detections.of.ind <- CBs[[c]]$detections <- dets[substr(dets$approxOrd, start = 1, stop = 1) == inds[c],]
@@ -63,7 +64,7 @@ for (c in 1){ #1:length(CBs)
   
   # last file path (for double checking below):
   last.clip.sound.path.key <- dets.key.pam[nrow(dets.key.pam),]$sound.files
-  ch <- ifelse(fullTimeFromClipStart(last.clip.sound.path.key,0) - first.clip.sound.path.key.start > 0, "all detections are before midnight", "you need to double check if the files got messed up by carrying over to the next day")
+  ch <- ifelse(fullTimeFromClipStart(last.clip.sound.path.key,0) - first.clip.sound.path.key.start > 0, "all detections are before midnight \n", "you need to double check if the files got messed up by carrying over to the next day \n")
   cat(ch)
   
   # Read in and combine waves
@@ -79,7 +80,7 @@ for (c in 1){ #1:length(CBs)
   time.gaps <- c(0, time.gaps)[-(length(time.gaps)+1)]
   
   ## Plot the accumulation of CBs over time - interesting for plotting exchanges iff you select EVERY chest beat:
-  plot(time.gaps/60, 1:15, bty="l", las=1, type="l", lwd=2, xlab="Elapsed time (min)", ylab="Cumulative # chest beats")
+  plot(time.gaps/60, 1:length(time.gaps), bty="l", pch=21, las=1, type="b", lwd=1.75, xlab="Elapsed time (min)", ylab="Cumulative # chest beats", main=names(CBs)[c])
   
   # get 6 closest Pam’s to key Pam by distance:
   (pamsToCheck <- pamNeighbors(key.pam, pam.xy, n=10, self=TRUE) )
@@ -94,7 +95,7 @@ for (c in 1){ #1:length(CBs)
     # Get start times data.frame within the focal PAM based on time gaps in the key PAM:
     CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".", keyPAMstarts4check = dets.key.pam$startClip, tabulate = TRUE, add=10)
     
-    plot.check = "YES"
+    plot.check = "NO"
     
     if (plot.check!="NO"){
       ## Check using plots
