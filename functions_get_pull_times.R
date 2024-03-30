@@ -5,14 +5,14 @@ fullTimeFromClipStart <- function(sound.path, clip.start){
   return(startFileTime+clip.start)
 }
 
-pullTime <- function(clip.start, inPAMfile, getPAM, clipLength=len, plot=TRUE){
+pullTime <- function(clip.start, inPAMfile, getPAM, clipLength=len, path=".", plot=TRUE, clockfix=TRUE){
   fullTimeSecondsToGet <- fullTimeFromClipStart(sound.path = inPAMfile, clip.start = clip.start)
   dateYYYYmmdd <- substr(inPAMfile, start = 4, stop = 11)
-  return(pullFromPam(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path=".", plot))
+  return(pullFromPam(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path, plot, clockfix))
 }
 
 
-pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path=".", plot=TRUE){
+pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path=".", plot=TRUE, clockfix=FALSE){
   
   oldw <- getOption("warn")
   options(warn = -1)
@@ -41,7 +41,15 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
     bts <- max(0, fullTimeSecondsToGet - t1s[m2])
   }
   
-  tmpls <- list(getPAM, kfl, bts, read_wave(kfl, from = bts, to = bts + len))
+  ## Clock drift correction NOT DONE if FALSE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if (clockfix==TRUE){
+    bts.clock.redrift <- hz2GPStime(bts, kfl, reverse = TRUE)
+  }
+  if (clockfix==FALSE){
+    bts.clock.redrift <- bts
+  }
+  
+  tmpls <- list(getPAM, kfl, bts.clock.redrift, read_wave(kfl, from = bts.clock.redrift, to = bts.clock.redrift + len))
   if (plot==TRUE){
     viewSpec(tmpls[[4]], main = pam, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning")
   }
@@ -51,17 +59,11 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
 }
 
 
-mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path="."){
+mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path=".", keyPAMstarts4check){
   
-  pam.1st.clip <- pullTime(clip.start, inPAMfile, getPAM, clipLength, plot=FALSE)
+  pam.1st.clip <- pullTime(clip.start, inPAMfile, getPAM, clipLength, plot=FALSE, clockfix=FALSE) #FALSE=GPS time
   first.file.start <- fullTimeFromClipStart(pam.1st.clip[[2]],0)
   first.clip.start <- fullTimeFromClipStart(pam.1st.clip[[2]],pam.1st.clip[[3]])
-  
-  ## NEED TO CORRECT FOR CLOCK DRIFT BASED ON TIME WITHIN EACH FILE FOR EACH FILE/PAM!
-  # add scalar to each item in the time.gaps vector...
-  
-  # first check if it's even a possible issue - what's the scale of the drift? and does it cummulate when you mush over 1+ hours?
-  
   
   all.clip.starts <- first.clip.start + gaps
   starts.in.fls <- all.clip.starts - first.file.start
@@ -79,10 +81,24 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
   fls <- kfls[rems]
   all.clip.starts1 <- all.clip.starts - fullTimeFromClipStart(fls,0)
   
+  ## Clock drift correction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Here, go from GPS "true" time back to Hz-based "raw" time within each PAM:
+  all.clip.starts.re.drift <- hz2GPStime(clipStart = all.clip.starts1, soundpath = fls, reverse = TRUE)
+  
+  ## Check that the matching PAM matches:
+  if (substr(inPAMfile, start = 1, stop = 1) == pam) {
+    if(unique(round(keyPAMstarts4check,8)!=round(all.clip.starts.re.drift,8))){
+      stop("There is a problem with the clock drift reversal on the key PAM.") 
+    }
+  }
+  
+  # Save clips
   clps <- list()
   for (i in 1:length(gaps)){
-    clps[[i]] <- read_wave(fls[i], from = all.clip.starts1[i], to = (all.clip.starts1[i] + len))
+    clps[[i]] <- read_wave(fls[i], from = all.clip.starts.re.drift[i], to = (all.clip.starts.re.drift[i] + len))
   }
+  
+  # Bind them all up into one:
   return(do.call(tuneR::bind, args = clps))
 }
 

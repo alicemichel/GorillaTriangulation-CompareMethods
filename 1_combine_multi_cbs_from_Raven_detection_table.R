@@ -6,6 +6,7 @@ library(warbleR)
 library(monitoR)
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_distance_calcs.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_get_pull_times.R")
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_clock_drift.R")
 
 par(mfrow=c(1,1))
 
@@ -26,9 +27,12 @@ par(mfrow=c(1,1))
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-dets <- read.csv("20230206_detections_Q.csv")
+dets <- read.csv("20230206_detections_Q.csv")[,1:14]
 buff = 1 #Buffer to add to each clip if they're tight
 dets$startClip <- dets$startClip - buff
+
+# Convert clip start times to GPS time to correct for clock drift within each hour-long file:
+dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
 
 inds <- unique(substr(dets$approxOrd, start = 1, stop = 1))[1:2]
 
@@ -51,7 +55,7 @@ for (c in 1){ #1:length(CBs)
   dets.key.pam <- detections.of.ind[detections.of.ind$pam==key.pam,]
   
   # Get the start time of the first detection within the file:
-  first.clip.t.key <- dets.key.pam[1,]$startClip
+  first.clip.t.key <- dets.key.pam[1,]$startClip.GPS
   # Get the file path:
   first.clip.sound.path.key <- dets.key.pam[1,]$sound.files
   # Use the file path to know when the file actually starts since midnight the night before:
@@ -68,15 +72,11 @@ for (c in 1){ #1:length(CBs)
   for (i in 1:nrow(dets.key.pam)){
     wavs[[i]] <- read_wave(dets.key.pam[i,]$sound.files, from = dets.key.pam[i,]$startClip, to = (dets.key.pam[i,]$startClip + len))
     clip.sound.path.key.next.start.gap.from.first <- fullTimeFromClipStart(dets.key.pam[i+1,]$sound.files,0) - first.clip.sound.path.key.start
-    (time.gaps[i] <- dets.key.pam[i+1,]$startClip - (first.clip.t.key) + clip.sound.path.key.next.start.gap.from.first)
+    (time.gaps[i] <- dets.key.pam[i+1,]$startClip.GPS - (first.clip.t.key) + clip.sound.path.key.next.start.gap.from.first)
   }
   CBs[[c]]$w.keypam <- do.call(tuneR::bind, args = wavs)
   # Get the real-time start gaps between each detection on the key PAM:
   time.gaps <- c(0, time.gaps)[-(length(time.gaps)+1)]
-  
-  ## NEED TO CORRECT FOR CLOCK DRIFT BASED ON TIME WITHIN EACH FILE FOR EACH FILE/PAM!
-  # add scalar to each item in the time.gaps vector...
-  
   
   ## Plot the accumulation of CBs over time - interesting for plotting exchanges iff you select EVERY chest beat:
   plot(time.gaps/60, 1:15, bty="l", las=1, type="l", lwd=2, xlab="Elapsed time (min)", ylab="Cumulative # chest beats")
@@ -91,11 +91,7 @@ for (c in 1){ #1:length(CBs)
   CBs[[c]]$w.pam <- list()
   for (pam in pamsToGet){ 
     
-    ## NEED TO CORRECT FOR CLOCK DRIFT BASED ON TIME WITHIN EACH FILE FOR EACH FILE/PAM!
-    # add scalar to each item in the time.gaps vector...
-    
-    
-    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".")
+    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".", keyPAMstarts4check = dets.key.pam$startClip)
     
     ## Check using plots
     par(mfrow=c(2,1))
@@ -107,8 +103,9 @@ for (c in 1){ #1:length(CBs)
     names(CBs[[c]])[names(CBs[[c]])=="w.pam"] <- paste0("w.",pam)
     
     ## Alternatively could incorporate selection of delay into the function manually instead of wide length, but need to paste in emptiness and gets complicated
-    
   }
+  
+  
 }
 
 # writeWave(..., "...wav")
