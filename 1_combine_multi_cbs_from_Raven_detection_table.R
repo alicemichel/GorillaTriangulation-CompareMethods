@@ -28,6 +28,8 @@ par(mfrow=c(1,1))
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
 dets <- read.csv("20230206_detections_Q.csv")[,1:14]
+#dets$approxOrd <- approxOrd(dets)
+
 buff = 1 #Buffer to add to each clip if they're tight
 dets$startClip <- dets$startClip - buff
 
@@ -41,7 +43,8 @@ pamID <- unique(dets$pam) # change to reflect sound files present in the folder
 
 start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
 
-len = 7
+len = 7 #make >7 if hoots are included, since it'll shift the others way back (hoots up to like 6 secs pre-CB...)
+# To get len, take the max selection length. Add the max expected lag based on the max distance. Then add the expected length of a distant CB (2.5sec) to that...
 
 printwindow = 40
 

@@ -11,14 +11,7 @@ pullTime <- function(clip.start, inPAMfile, getPAM, clipLength=len, path=".", pl
   return(pullFromPam(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path, plot, clockfix))
 }
 
-
-pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path=".", plot=TRUE, clockfix=FALSE){
-  
-  oldw <- getOption("warn")
-  options(warn = -1)
-  
-  soundfiles <- list.files(path, pattern = "S20.*.wav")
-  
+whichFile <- function(soundfiles, fullTimeSecondsToGet, getPAM, dateYYYYmmdd){
   kfls <- soundfiles[grep(paste0(getPAM,"_"), soundfiles)]
   daytext = substr(kfls, start = 4, stop = 11) 
   kfls = kfls[daytext == dateYYYYmmdd] # exclude other days -- could be a problem for midnight to 1am
@@ -40,6 +33,21 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
     kfl <- kfls[m2]
     bts <- max(0, fullTimeSecondsToGet - t1s[m2])
   }
+  
+  tmp <- data.frame(kfl, bts)
+
+  return(tmp)
+}
+
+pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path=".", plot=TRUE, clockfix=FALSE){
+  
+  oldw <- getOption("warn")
+  options(warn = -1)
+  
+  soundfiles <- list.files(path, pattern = "S20.*.wav")
+  tmp <- whichFile(soundfiles, fullTimeSecondsToGet, getPAM, dateYYYYmmdd)
+  kfl <- tmp[1,1]
+  bts <- tmp[1,2]
   
   ## Clock drift correction NOT DONE if FALSE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if (clockfix==TRUE){
