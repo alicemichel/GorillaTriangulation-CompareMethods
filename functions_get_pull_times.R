@@ -49,7 +49,7 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
     bts.clock.redrift <- bts
   }
   
-  tmpls <- list(getPAM, kfl, bts.clock.redrift, read_wave(kfl, from = bts.clock.redrift, to = bts.clock.redrift + len))
+  tmpls <- list(getPAM, kfl, bts.clock.redrift, read_wave(kfl, from = bts.clock.redrift, to = bts.clock.redrift + clipLength))
   if (plot==TRUE){
     viewSpec(tmpls[[4]], main = pam, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning")
   }
@@ -59,7 +59,7 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
 }
 
 
-mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path=".", keyPAMstarts4check){
+mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path=".", tabulate=FALSE, keyPAMstarts4check, add=10){
   
   pam.1st.clip <- pullTime(clip.start, inPAMfile, getPAM, clipLength, plot=FALSE, clockfix=FALSE) #FALSE=GPS time
   first.file.start <- fullTimeFromClipStart(pam.1st.clip[[2]],0)
@@ -92,17 +92,46 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
     }
   }
   
-  # Save clips
-  clps <- list()
-  for (i in 1:length(gaps)){
-    clps[[i]] <- read_wave(fls[i], from = all.clip.starts.re.drift[i], to = (all.clip.starts.re.drift[i] + len))
+  # Save data frame of soundfiles and start times
+  if (tabulate==TRUE){
+    newdets <- data.frame(selection = 1:length(fls), soundfile = fls, startClip = all.clip.starts.re.drift)
+    extend <- newdets[1,]$startClip - add
+    slctn <- 0
+    snd <- newdets[1,]$soundfile
+    if (extend < 0 ){
+      extend <- newdets[nrow(newdets),]$startClip + clipLength + add
+      slctn <- nrow(newdets) + 1
+      snd <- newdets[nrow(newdets),]$soundfile
+    }
+    newdets <- rbind(newdets, c(slctn, snd, extend))
+    newdets$startClip <- as.numeric(newdets$startClip)
+    newdets$selection <- as.numeric(newdets$selection)
+    newdets <- newdets[order(newdets$selection),]
+    return(newdets)
   }
   
-  # Bind them all up into one:
-  return(do.call(tuneR::bind, args = clps))
+  # Save merged wave sound clips
+  else {
+    clps <- list()
+    for (i in 1:length(gaps)){
+      clps[[i]] <- read_wave(fls[i], from = all.clip.starts.re.drift[i], to = (all.clip.starts.re.drift[i] + clipLength))
+    }
+    # Bind them all up into one:
+    return(do.call(tuneR::bind, args = clps))
+  }
+  
 }
 
 
+
+df2mergedWav <- function(df, clipLength){
+  clps <- list()
+  for (i in 1:nrow(df)){
+    clps[[i]] <- read_wave(df[i,]$soundfile, from = df[i,]$startClip, to = df[i,]$startClip + clipLength)
+  }
+  # Bind them all up into one:
+  return(do.call(tuneR::bind, args = clps))
+}
 
 
 

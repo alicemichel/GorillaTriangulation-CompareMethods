@@ -87,18 +87,24 @@ for (c in 1){ #1:length(CBs)
   # of those, only those you have sound files for:
   (pamsToGet <-  pamsToCheck[pamsToCheck %in% pamID]) #include key PAM as a check
   
-  # loop through each PAM and add their amalgamated grabs from the same time period to the big list for this gorilla:
+  # loop through each PAM for this gorilla:
   CBs[[c]]$w.pam <- list()
   for (pam in pamsToGet){ 
     
-    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".", keyPAMstarts4check = dets.key.pam$startClip)
+    # Get start times data.frame within the focal PAM based on time gaps in the key PAM:
+    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".", keyPAMstarts4check = dets.key.pam$startClip, tabulate = TRUE, add=10)
     
-    ## Check using plots
-    par(mfrow=c(2,1))
-    ## Amalgamated spectro in key PAM:
-    viewSpec(CBs[[c]]$w.keypam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = printwindow)
-    ## Amalgamated spectro in focal PAM:
-    viewSpec(CBs[[c]]$w.pam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = printwindow)
+    plot.check = "YES"
+    
+    if (plot.check!="NO"){
+      ## Check using plots
+      par(mfrow=c(2,1))
+      ## Amalgamated spectro in key PAM:
+      viewSpec(CBs[[c]]$w.keypam, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = key.pam, page.length = printwindow)
+      ## Amalgamated spectro in focal PAM:
+      mergWvFoc <- df2mergedWav(df = CBs[[c]]$w.pam, clipLength=len)
+      viewSpec(mergWvFoc, interactive = F, start.time = len, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = printwindow)
+    }
     
     names(CBs[[c]])[names(CBs[[c]])=="w.pam"] <- paste0("w.",pam)
     
