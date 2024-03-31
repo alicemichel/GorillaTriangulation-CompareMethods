@@ -1,7 +1,64 @@
 
 
-approxOrd <- function(Raven.selections.df) {
+approxOrd <- function(Raven.selections.path, clipLength = 7, path=".", pams=rownames(pam.xy)) {
   
+  dets <- read.table(Raven.selections.path, header = TRUE, sep = "\t")
+  dets$startClip <- dets$File.Offset..s.
+  dets$sound.files <- gsub(".*/","",dets$Begin.Path)
+  dets$pam <- substr(dets$sound.files, start=1, stop=1)
+  dets$duration <- dets$Sample.Length..samples./44100
   
-  
+  df <- dets[,c("pam", "sound.files", "startClip", "duration")]
+  df$approxOrd <- NA
+  df$ind <- NA
+  df$min.cut <- NA
+  df$ordered.cuts <- NA
+    
+  for (i in 1:nrow(df)){
+    
+    w <- read_wave(df[i,]$sound.files, from = df[i,]$startClip, to = (df[i,]$startClip + clipLength))
+    
+    viewSpec(w, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = df[i,]$pam)
+    
+    fullTimeSecondsToGet <- fullTimeFromClipStart(sound.path = df[i,]$sound.files, clip.start = df[i,]$startClip)
+    
+    dateYYYYmmdd <- substr(df[i,]$sound.files, start = 4, stop = 11) #there will be an error if this differs between the PAMs!
+    
+    onOthers <- data.frame(pams)
+    onOthers$sound.files <- NA
+    onOthers$startClip <- NA
+    errcnt <- 0
+    for (getPAM in pams){
+      tryCatch({
+      tmp <- whichFile(path, fullTimeSecondsToGet, getPAM, dateYYYYmmdd)
+      onOthers[onOthers$pams==getPAM,]$sound.files <- tmp[[1]]
+      onOthers[onOthers$pams==getPAM,]$startClip <- tmp[[2]]
+      }, error=function(e){0}) #cat("ERROR :",conditionMessage(e), "\n")
+    }
+    rownames(onOthers) <- onOthers$pams
+    # reorder the df so that the detection PAM comes first, and remove missing data (PAM not in folder, this should not be any later on, but it might be if the time isn't found, actually you'd probably get an error then in the function whichFile)
+    onOthers1 <- as.data.frame(rbind(onOthers[rownames(onOthers)==df[i,]$pam,-1], onOthers[!is.na(onOthers$startClip) & rownames(onOthers)!=df[i,]$pam,-1]))
+    cat(paste0("removed"), sum(is.na(onOthers$startClip)), "PAMs without soundfiles to search \n  printing soundclips to select start times next for selection", i, "out of", nrow(df), "..")
+    # now need to print these and select in them to see who is first! and loop through all selections...
+    
+    onOthers1$cut <- NA
+    par(mfrow=c(2,1))
+    for (j in rownames(onOthers1)){
+      tmpwv <- read_wave(onOthers1[j,]$sound.files, from = onOthers1[j,]$startClip, to = (onOthers1[j,]$startClip + clipLength))
+      viewSpec(tmpwv, interactive = F, units="seconds", frq.lim = c(0.1, 0.9), wl=2048, ovlp = 90, wn="hanning", main = rownames(onOthers1[j,]))
+      
+      usr <- readline("start of chest beat:")
+      if (usr=="skip"){
+        break
+      }
+      onOthers1[j,]$cut <- as.numeric(usr)
+    }
+    ordered <- onOthers1[order(onOthers1$cut),]
+    
+    df[i,]$approxOrd <- paste0(rownames(ordered), collapse = "")
+    df[i,]$ind <- substr(df[i,]$approxOrd, start=1, stop=1)
+    df[i,]$min.cut <- ordered[1,]$cut
+    df[i,]$ordered.cuts <- paste(ordered$cut, collapse = "_")
+  }
+  return(df)
 }

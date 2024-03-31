@@ -11,10 +11,11 @@ pullTime <- function(clip.start, inPAMfile, getPAM, clipLength=len, path=".", pl
   return(pullFromPam(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, path, plot, clockfix))
 }
 
-whichFile <- function(soundfiles, fullTimeSecondsToGet, getPAM, dateYYYYmmdd){
+whichFile <- function(path, fullTimeSecondsToGet, getPAM, dateYYYYmmdd){
+  soundfiles <- list.files(path, pattern = "S20.*.wav")
   kfls <- soundfiles[grep(paste0(getPAM,"_"), soundfiles)]
   daytext = substr(kfls, start = 4, stop = 11) 
-  kfls = kfls[daytext == dateYYYYmmdd] # exclude other days -- could be a problem for midnight to 1am
+  kfls = kfls[daytext == dateYYYYmmdd] #there will be an error if this differs between the PAMs!
   kfls = kfls[nchar(kfls)==81] # exclude cut files from processing.
   # cat("note: files must have the format letter_file!")
   
@@ -44,8 +45,7 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
   oldw <- getOption("warn")
   options(warn = -1)
   
-  soundfiles <- list.files(path, pattern = "S20.*.wav")
-  tmp <- whichFile(soundfiles, fullTimeSecondsToGet, getPAM, dateYYYYmmdd)
+  tmp <- whichFile(path, fullTimeSecondsToGet, getPAM, dateYYYYmmdd)
   kfl <- tmp[1,1]
   bts <- tmp[1,2]
   

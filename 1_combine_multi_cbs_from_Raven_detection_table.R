@@ -27,8 +27,17 @@ par(mfrow=c(1,1))
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-dets <- read.csv("20230206_detections_Q.csv")[,1:14]
-#dets$approxOrd <- approxOrd(dets)
+#dets <- read.csv("20230206_detections_Q.csv")[,1:14]
+
+dets <- approxOrd("20230206_J_and_U.txt")
+# check and fix any errors
+dets[6,]$ind <- "J" #this one is just hoots
+#saveRDS(dets, "dets20240331.rds")
+#preserve detection on distant PAMs? could use this data to ask how far the sound of that individual travelled...important to not let it go or be more systematic when collecting that data? I say former... change function to output a list with a main dataframe (this dets) and a sub-list of all the dataframes containing the cuts per pam. Or add a column that has a vector of cuts corresponding to the vector of PAM orders? and don't remove the PAMs where it wasn't detected so you know you looked in those in case not all were in the folder
+# as.numeric(strsplit(df$ordered.cuts, split= "_", fixed=TRUE)[[1]]) #this now does that
+
+# take the cut column, subtract from start time, add the buff - do this in a function..
+dets$clipStart.new <- cutNbuff(dets$clipStart, dets$cut, buffer=1)
 
 buff = 1 #Buffer to add to each clip if they're tight
 dets$startClip <- dets$startClip - buff
