@@ -37,13 +37,13 @@ pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 #preserve detection on distant PAMs? could use this data to ask how far the sound of that individual travelled...important to not let it go or be more systematic when collecting that data? I say former... change function to output a list with a main dataframe (this dets) and a sub-list of all the dataframes containing the cuts per pam. Or add a column that has a vector of cuts corresponding to the vector of PAM orders? and don't remove the PAMs where it wasn't detected so you know you looked in those in case not all were in the folder
 # as.numeric(strsplit(df$ordered.cuts, split= "_", fixed=TRUE)[[1]]) #this now does that
 
-dets <- readRDS("dets20240331.rds")
+dets.long <- readRDS("dets20240331.rds")
 
 # take the cut column, subtract from start time, add the buff - do this in a function..
-dets$startClip <- cutNbuff(dets$start, dets$min.cut, buffer=1)
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
-dets.short <- dets[dets$pam==dets$ind,]
+dets <- dets.long[dets.long$pam==dets.long$ind,]
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
@@ -58,8 +58,8 @@ len = 7 #make >7 if hoots are included, since it'll shift the others way back (h
 
 printwindow = 40
 
-# find the first chest beat
-fullTimeFromClipStart(dets$sound.files,dets$startClip.GPS)
+# plot the consecutive chest beats of each individual over one another
+plotConseq(dets)
 
 CBs <- as.list(inds)
 names(CBs) <- inds
