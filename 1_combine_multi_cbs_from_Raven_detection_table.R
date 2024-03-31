@@ -7,6 +7,8 @@ library(monitoR)
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_distance_calcs.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_get_pull_times.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_clock_drift.R")
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_raven_approx_ord.R")
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_cut_and_buffer.R")
 
 par(mfrow=c(1,1))
 
@@ -29,26 +31,25 @@ pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
 #dets <- read.csv("20230206_detections_Q.csv")[,1:14]
 
-dets <- approxOrd("20230206_J_and_U.txt")
-# check and fix any errors
-dets[6,]$ind <- "J" #this one is just hoots
+#dets <- approxOrd("20230206_J_and_U.txt", num=2)
+
 #saveRDS(dets, "dets20240331.rds")
 #preserve detection on distant PAMs? could use this data to ask how far the sound of that individual travelled...important to not let it go or be more systematic when collecting that data? I say former... change function to output a list with a main dataframe (this dets) and a sub-list of all the dataframes containing the cuts per pam. Or add a column that has a vector of cuts corresponding to the vector of PAM orders? and don't remove the PAMs where it wasn't detected so you know you looked in those in case not all were in the folder
 # as.numeric(strsplit(df$ordered.cuts, split= "_", fixed=TRUE)[[1]]) #this now does that
 
-# take the cut column, subtract from start time, add the buff - do this in a function..
-dets$clipStart.new <- cutNbuff(dets$clipStart, dets$cut, buffer=1)
+dets <- readRDS("dets20240331.rds")
 
-buff = 1 #Buffer to add to each clip if they're tight
-dets$startClip <- dets$startClip - buff
+# take the cut column, subtract from start time, add the buff - do this in a function..
+dets$startClip <- cutNbuff(dets$start, dets$min.cut, buffer=1)
+
+# keep only the rows where the focal PAM matches the nearest-to-individual PAM:
+dets.short <- dets[dets$pam==dets$ind,]
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
 
-inds <- unique(substr(dets$approxOrd, start = 1, stop = 1))[1:2]
-
-dets <- dets[dets$pam %in% c("J","H","Q","U"),] #for now, use 6 closest in future...within 2nd loop below
-pamID <- unique(dets$pam) # change to reflect sound files present in the folder
+inds <- unique(dets$ind)
+pamID <- unique(substr(list.files(".", pattern = "S20.*.wav"), start = 1, stop = 1)) # reflects sound files present in the folder
 
 start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
 
@@ -56,6 +57,9 @@ len = 7 #make >7 if hoots are included, since it'll shift the others way back (h
 # To get len, take the max selection length. Add the max expected lag based on the max distance. Then add the expected length of a distant CB (2.5sec) to that...
 
 printwindow = 40
+
+# find the first chest beat
+fullTimeFromClipStart(dets$sound.files,dets$startClip.GPS)
 
 CBs <- as.list(inds)
 names(CBs) <- inds
@@ -96,8 +100,8 @@ for (c in 1:length(CBs)){
   ## Plot the accumulation of CBs over time - interesting for plotting exchanges iff you select EVERY chest beat:
   plot(time.gaps/60, 1:length(time.gaps), bty="l", pch=21, las=1, type="b", lwd=1.75, xlab="Elapsed time (min)", ylab="Cumulative # chest beats", main=names(CBs)[c])
   
-  # get 6 closest Pam’s to key Pam by distance:
-  (pamsToCheck <- pamNeighbors(key.pam, pam.xy, n=10, self=TRUE) )
+  # get closest Pam’s to key Pam by distance:
+  (pamsToCheck <- pamNeighbors(key.pam, pam.xy, n=6, self=TRUE) )
   
   # of those, only those you have sound files for:
   (pamsToGet <-  pamsToCheck[pamsToCheck %in% pamID]) #include key PAM as a check
@@ -127,7 +131,7 @@ for (c in 1:length(CBs)){
     
     names(CBs[[c]])[names(CBs[[c]])=="w.pam"] <- paste0("w.",pam)
     
-    writeWave(mergWvFoc, paste0("merged_", start.date, "_ind_", names(CBs)[c], "_on_", pam, ".wav"))
+    #writeWave(mergWvFoc, paste0("merged_", start.date, "_ind_", names(CBs)[c], "_on_", pam, ".wav"))
     
   }
   
