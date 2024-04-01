@@ -14,22 +14,20 @@ par(mfrow=c(1,1))
 
 ## Strategy:
 
-## 1. Read in detection tables from R
-##  a. These could be the tables from the field, created from inputting one PAM and getting detections matching on others.
-##  b. Alternatively they could come from Raven. Just put them through your R selection to get them into the same format with the additional R columns.
-## 2. Split the table into individual gorillas, by the "Approx Order" column you made, assuming no two gorillas are closest to the same PAM (focus on within grid...).
-##  a. Optionally, before splitting them add a buffer to the start of each unique-CB ('buff')
+## 1. Read in detection tables from Raven
+
+## 2. Split the table into individual gorillas, by the "Approx Order" column, assuming no two gorillas are closest to the same top 3 PAMs (focus on within grid...).
+
 ## 3. Loop the above through each gorilla's detections data table.
-##  a. Choose a key PAM. Currently it's based on the selected individual IDs, but you will do this using Approx Order to automate it.
+##  a. Choose a key PAM that the individual was closest to.
 ##  b. Glue together all the detections from that individual on the key PAM together (set "len" for the unique-CB length).
-##  c. Record the time gaps between each unique-CB from that PAM.
+##  c. Record the time gaps between each unique-CB from that PAM -- in "true" (GPS) time.
+
 ##  d. Then loop through the remaining PAMs (actually all even the key PAM, so as to check the gaps didn't get messed):
-##    i. Using the first detection on the specific PAM as a base and the time gaps from the key PAM, glue together the same time fragments for each PAM
+##    i. Using the first detection on the specific PAM as a base and the time gaps from the key PAM, glue together the same time fragments for each PAM. Importantly, the times need to first be converted within each soundfile to the "false" (sample) time, essentially reverse clock-drifting the time PER PAM. Run this by someone else to see if it makes sense...
+
+
 ##   ii. Save as a list to use in the next step (cross-correlation). Print the spectrograms to verify no errors. 
-
-
-
-
 
 
 
@@ -44,7 +42,7 @@ pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
 dets.long <- readRDS("dets20240331.rds")
 
-# take the cut column, subtract from start time, add the buff - do this in a function..
+# take the cut column, subtract from start time, add the buffer
 dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
