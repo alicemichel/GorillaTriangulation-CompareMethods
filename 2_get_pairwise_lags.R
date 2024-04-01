@@ -15,6 +15,16 @@ setwd(ogdir)
 # 7. templateCutoff to change template cutoffs in the detection list object (iteratively with plot and getDetections)
 
 
+## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
+fieldLocs <- read.csv("fieldTraingLocs.csv")
+gorilla <- fieldLocs[19,c("X","Y")] #the gorilla in question, swamp big guy
+pams2check <- pam.xy[rownames(pam.xy)%in%c("J","C"),]
+pams2check$dist2gorilla <- distGorMic(gorilla, pams2check)
+pams2check$time2gorilla <- pams2check$dist2gorilla/340
+(lagExp = pams2check$time2gorilla[2] - pams2check$time2gorilla[1])
+
+
+
 ## In this example, we get the lag J-Q. This was not a combo in the field that led to good triangulation, but let's see if we can get a lag from the ordered cross-correlation method. Compare it to the expected lag based on the true field-validated location.
 
 q <- read_wave("20230206_192154__Q_clip_start_T1492.049489.wav") 

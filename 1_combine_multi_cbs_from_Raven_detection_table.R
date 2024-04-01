@@ -27,6 +27,12 @@ par(mfrow=c(1,1))
 ##    i. Using the first detection on the specific PAM as a base and the time gaps from the key PAM, glue together the same time fragments for each PAM
 ##   ii. Save as a list to use in the next step (cross-correlation). Print the spectrograms to verify no errors. 
 
+
+
+
+
+
+
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
 #dets <- read.csv("20230206_detections_Q.csv")[,1:14]
@@ -34,8 +40,7 @@ pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 #dets <- approxOrd("20230206_J_and_U.txt", num=2)
 
 #saveRDS(dets, "dets20240331.rds")
-#preserve detection on distant PAMs? could use this data to ask how far the sound of that individual travelled...important to not let it go or be more systematic when collecting that data? I say former... change function to output a list with a main dataframe (this dets) and a sub-list of all the dataframes containing the cuts per pam. Or add a column that has a vector of cuts corresponding to the vector of PAM orders? and don't remove the PAMs where it wasn't detected so you know you looked in those in case not all were in the folder
-# as.numeric(strsplit(df$ordered.cuts, split= "_", fixed=TRUE)[[1]]) #this now does that
+# as.numeric(strsplit(df$ordered.cuts, split= "_", fixed=TRUE)[[1]]) #check distance each was heard by PAMs from
 
 dets.long <- readRDS("dets20240331.rds")
 
@@ -136,19 +141,4 @@ for (c in 1:length(CBs)){
   }
   
 }
-
-
-
-
-
-# for cross-correlation, this may be way too much data... python? or
-# cut off the amplitude to low (not 0) up to the start of the clipped clip per each pam...still minutes of data...
-## Alternatively could incorporate selection of delay into the function manually instead of wide length, but need to paste in emptiness and gets complicated
-
-
-
-
-
-
-
 
