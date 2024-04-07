@@ -33,13 +33,8 @@ par(mfrow=c(1,1))
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-#dets <- read.csv("20230206_detections_Q.csv")[,1:14]
-
-#dets <- approxOrd("20230206_J_and_U.txt", num=2)
-
+#dets.long <- approxOrd("20230206_J_and_U.txt", num=2)
 #saveRDS(dets, "dets20240331.rds")
-# as.numeric(strsplit(df$ordered.cuts, split= "_", fixed=TRUE)[[1]]) #check distance each was heard by PAMs from
-
 dets.long <- readRDS("dets20240331.rds")
 
 # take the cut column, subtract from start time, add the buffer
