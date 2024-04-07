@@ -21,7 +21,7 @@ ravenprep <- function(CBdetsList, clipLength, savewvs=TRUE, detbegin=rep(0, leng
   if (savewvs==TRUE){
     timetxt=paste0("fileCreated_",substr(Sys.time(), start=12, stop=19))
     timetxt=gsub(":","",timetxt)
-    flnm <- paste0(subDir, "/RavenLags_", timetxt, ".xlsx")
+    flnm <- paste0(subDir, "/", substr(CBdetsList[[1]]$detections$sound.files[1], start=4, stop=11), "_RavenLags_", timetxt, ".xlsx")
     pamset=lapply(wavlist, function(x) substr(names(x), start=3, stop=3))
     writexl::write_xlsx(data.frame(IndID=rep(names(CBdetsList), lengths(pamset)), PAM=Reduce(c, pamset), lag=NA), flnm)
   }

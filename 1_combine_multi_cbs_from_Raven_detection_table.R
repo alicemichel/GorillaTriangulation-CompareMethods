@@ -126,12 +126,7 @@ for (c in 1:length(CBs)){
         viewSpec(mergWvFoc, interactive = F, start.time = len, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = pam, page.length = printwindow)
       }
     }
-    
     names(CBs[[c]])[names(CBs[[c]])=="w.pam"] <- paste0("w.",pam)
-    
-    #writeWave(mergWvFoc, paste0("merged_", start.date, "_ind_", names(CBs)[c], "_on_", pam, ".wav"))
-    
   }
-  
 }
 
