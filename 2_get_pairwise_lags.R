@@ -6,9 +6,9 @@ setwd(ogdir)
 ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
 fieldLocs <- read.csv("fieldTraingLocs.csv")
 gorilla <- fieldLocs[19,c("X","Y")] #the gorilla in question, swamp big guy
-pams2check <- pam.xy[rownames(pam.xy)%in%c("J","H"),]
+pams2check <- pam.xy[rownames(pam.xy)%in%c("J","Q"),]
 pams2check$dist2gorilla <- distGorMic(gorilla, pams2check)
-pams2check$time2gorilla <- pams2check$dist2gorilla/340
+pams2check$time2gorilla <- pams2check$dist2gorilla/343
 (lagExp = pams2check$time2gorilla[2] - pams2check$time2gorilla[1])
 
 
