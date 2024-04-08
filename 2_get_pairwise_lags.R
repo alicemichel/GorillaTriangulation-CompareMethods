@@ -7,7 +7,7 @@ source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason
 ## Make detection tables into cross-correlated lags
 
 ## 1. Export for Raven (or Python):
-ravenprep(CBs, len, detlim = c(23,NA))
+ravenprep(CBs, len) #, detlim = c(23,NA)
 rm(list = ls())
 
 ## 2. Or, do cross-correlation in R:
