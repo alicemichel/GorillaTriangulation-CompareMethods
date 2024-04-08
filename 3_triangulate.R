@@ -2,6 +2,8 @@
 # Need to do this before, don't need to run necessarily
 # source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/2_get_pairwise_lags.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_goriLoc_Damien_edit.R")
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_distance_calcs.R")
+
 
 # should already be in the correct clock-drift time
 # and the right time gaps
@@ -28,14 +30,27 @@ for (sb in unique(lags$IndID)){
 
 ## Compare to field localizations for accuracy metrics:
 
-# ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
-# fieldLocs <- read.csv("fieldTraingLocs.csv")
-# gorilla <- fieldLocs[19,c("X","Y")] #the gorilla in question, swamp big guy
-# pams2check <- pam.xy[rownames(pam.xy)%in%c("J","Q"),]
-# pams2check$dist2gorilla <- distGorMic(gorilla, pams2check)
-# pams2check$time2gorilla <- pams2check$dist2gorilla/343
-# (lagExp = pams2check$time2gorilla[2] - pams2check$time2gorilla[1])
-# # Do this for all of them...later...
+## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
+fieldLocs <- read.csv("../fieldTraingLocs.csv")
+ns = c(19,20)
+
+for (sbi in 1:length(unique(lags$IndID))){
+  field.prec <- fieldLocs[ns[sbi],]$Precision.m
+  gorilla <- fieldLocs[ns[sbi],c("X","Y")]
+  dist2gorilla <- distGorMic(gorilla, localizedSBs[[sbi]]$intersection)
+  dist2gorillaOpt <- distGorMic(gorilla, localizedSBs[[sbi]]$optimum)
+  plot(dist2gorilla, xaxt="n", xlab=NA, ylim=c(0,100), bty="l", las=1, ylab="Distance to actually found nest site", main=)
+  axis(1, at = 1:length(dist2gorilla), labels = localizedSBs[[sbi]]$intersection$pams, las=2)
+  cat("Starting with individual...", fieldLocs[ns[sbi],]$Nest.Site.ID, "\n")
+  cat("New method best:", "\n")
+  print(min(dist2gorilla))
+  cat("Field best:", "\n")
+  print(field.prec)
+  cat("New method summary:", "\n")
+  print(summary(dist2gorilla))
+  cat("New method KDE optimum (weights points within xextr of grid equally):", "\n")
+  print(dist2gorillaOpt[[1]])
+}
 
 
 
