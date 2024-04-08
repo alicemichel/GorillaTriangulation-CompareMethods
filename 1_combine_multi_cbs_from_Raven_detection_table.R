@@ -4,6 +4,7 @@ ogdir <- "~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeas
 setwd(ogdir)
 library(warbleR)
 library(monitoR)
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_relabel_files.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_distance_calcs.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_get_pull_times.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_clock_drift.R")
@@ -30,12 +31,16 @@ par(mfrow=c(1,1))
 ##   ii. Save as a list to use in the next step (cross-correlation). Print the spectrograms to verify no errors. 
 
 
+## prep sound files to do detections in Raven on the best PAM(s) per individual (may need to iteratively run approxOrd function to figure out which that is)
+
+relabelBARfiles(PAM="V")
+
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-#dets.long <- approxOrd("20230206_J_and_U.txt", num=2)
+dets.long <- approxOrd(Raven.selections.path = "20221128_Q.txt", buffer=1, clipLength = 6)
 #saveRDS(dets, "dets20240331.rds")
-dets.long <- readRDS("dets20240331.rds")
+#dets.long <- readRDS("dets20240331.rds")
 
 # take the cut column, subtract from start time, add the buffer
 dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)

@@ -1,6 +1,6 @@
 
 
-approxOrd <- function(Raven.selections.path, clipLength = 7, path=".", pams=rownames(pam.xy), num=nrow(df)) {
+approxOrd <- function(Raven.selections.path, clipLength = 7, buffer = 0, path=".", pams=rownames(pam.xy), num=nrow(df)) {
   
   dets <- read.table(Raven.selections.path, header = TRUE, sep = "\t")
   dets$start <- dets$File.Offset..s.
@@ -16,9 +16,8 @@ approxOrd <- function(Raven.selections.path, clipLength = 7, path=".", pams=rown
     
   for (i in 1:num){
     
-    w <- read_wave(df[i,]$sound.files, from = df[i,]$start, to = (df[i,]$start + clipLength))
-    
-    viewSpec(w, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = df[i,]$pam)
+    #w <- read_wave(df[i,]$sound.files, from = max(0, df[i,]$start - buffer), to = (df[i,]$start + clipLength))
+    #viewSpec(w, interactive = F, frq.lim = c(0.1, 0.9), wl=2048, ovlp=99, wn="hanning", main = df[i,]$pam)
     
     fullTimeSecondsToGet <- fullTimeFromClipStart(sound.path = df[i,]$sound.files, clip.start = df[i,]$start)
     
@@ -44,7 +43,7 @@ approxOrd <- function(Raven.selections.path, clipLength = 7, path=".", pams=rown
     onOthers1$cut <- NA
     par(mfrow=c(2,1))
     for (j in rownames(onOthers1)){
-      tmpwv <- read_wave(onOthers1[j,]$sound.files, from = onOthers1[j,]$start, to = (onOthers1[j,]$start + clipLength))
+      tmpwv <- read_wave(onOthers1[j,]$sound.files, from = max(0, onOthers1[j,]$start - buffer), to = (onOthers1[j,]$start + clipLength))
       viewSpec(tmpwv, interactive = F, units="seconds", frq.lim = c(0.1, 0.9), wl=2048, ovlp = 90, wn="hanning", main = rownames(onOthers1[j,]))
       
       usr <- readline("start of chest beat:")

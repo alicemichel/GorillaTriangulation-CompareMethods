@@ -71,4 +71,14 @@ for (sbi in 1:length(unique(lags$IndID))){
 #write.csv(fieldLocs, "../fieldTraingLocs.MethodsComparison.csv")
 
 
+fieldLocs <- fieldLocs[fieldLocs$X>0,]
+# pdf("../fieldlocs.pdf", width=10, height=7)
+par(mar=c(2,4,2,8))
+plot(xy, las=1, xlab=NA, ylab=NA, xlim=range(fieldLocs$X)+c(-100,100), ylim=range(fieldLocs$Y)+c(-100,100), col="grey20", pch=5, cex=1, main="Field-validated localizations to test new method accuracy")  
+text(fieldLocs$X, fieldLocs$Y, labels = fieldLocs$Nest.Site.ID, pos=1, cex=0.7)
+text(xy, labels = rownames(xy), cex=0.4)
+points(fieldLocs$X, fieldLocs$Y, col="red", pch=16)
+legend("right", title="Recorded on:", legend=c(paste0(substr(fieldLocs$Nest.Site.ID, start=1, stop=6), "_", as.Date(fieldLocs$date.gorillas.left.site, format = "%m/%d/%y")-1), rep("",4)), bty="n", xpd=T, inset=-0.22, cex=0.9)
+# dev.off()
+ 
 
