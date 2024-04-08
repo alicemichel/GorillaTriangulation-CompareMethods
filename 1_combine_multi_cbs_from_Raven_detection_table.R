@@ -39,14 +39,15 @@ relabelBARfiles(PAM="V")
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
 dets.long <- approxOrd(Raven.selections.path = "20221128_Q.txt", buffer=1, clipLength = 6)
-#saveRDS(dets, "dets20240331.rds")
-#dets.long <- readRDS("dets20240331.rds")
+#check_spectro(dets.long, c(1,4,9,11,14,16:18,20,22,23:26,32))
+#saveRDS(dets.long, "dets20240331.rds")
+#dets.long <- readRDS("dets20240408.rds")
 
 # take the cut column, subtract from start time, add the buffer
-dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=0)
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
-dets <- dets.long[dets.long$pam==dets.long$ind,]
+dets <- dets.long[4,] # [dets.long$pam==dets.long$ind,]
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
@@ -56,7 +57,7 @@ pamID <- unique(substr(list.files(".", pattern = "S20.*.wav"), start = 1, stop =
 
 start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
 
-len = 7 #make >7 if hoots are included, since it'll shift the others way back (hoots up to like 6 secs pre-CB...)
+len = 4 #make >7 if hoots are included, since it'll shift the others way back (hoots up to like 6 secs pre-CB...)
 # To get len, take the max selection length. Add the max expected lag based on the max distance. Then add the expected length of a distant CB (2.5sec) to that...
 
 printwindow = 40
@@ -85,7 +86,7 @@ for (c in 1:length(CBs)){
   
   # last file path (for double checking below):
   last.clip.sound.path.key <- dets.key.pam[nrow(dets.key.pam),]$sound.files
-  ch <- ifelse(fullTimeFromClipStart(last.clip.sound.path.key,0) - first.clip.sound.path.key.start > 0, "all detections are before midnight \n", "you need to double check if the files got messed up by carrying over to the next day \n")
+  ch <- ifelse(fullTimeFromClipStart(last.clip.sound.path.key,0) - first.clip.sound.path.key.start >= 0, "all detections are before midnight \n", "you need to double check if the files got messed up by carrying over to the next day \n")
   cat(ch)
   
   # Read in and combine waves
@@ -113,8 +114,13 @@ for (c in 1:length(CBs)){
   CBs[[c]]$w.pam <- list()
   for (pam in pamsToGet){ 
     
+    #############################################################################################
+    #############################################################################################
+    #############################################################################################
+    #############################################################################################
+    
     # Get start times data.frame within the focal PAM based on time gaps in the key PAM:
-    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".", keyPAMstarts4check = dets.key.pam$startClip, tabulate = TRUE, add=10)
+    CBs[[c]]$w.pam <- mergedClipsFromTimeGaps(clip.start=first.clip.t.key, inPAMfile=first.clip.sound.path.key, gaps=time.gaps, getPAM=pam, clipLength=len, path=".", keyPAMstarts4check = dets.key.pam$startClip, tabulate = TRUE, add=0)
     
     wave="sure"
     if (wave != "NO"){

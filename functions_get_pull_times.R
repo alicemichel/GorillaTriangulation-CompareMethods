@@ -72,13 +72,16 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
   pam.1st.clip <- pullTime(clip.start, inPAMfile, getPAM, clipLength, plot=FALSE, clockfix=FALSE) #FALSE=GPS time
   first.file.start <- fullTimeFromClipStart(pam.1st.clip[[2]],0)
   first.clip.start <- fullTimeFromClipStart(pam.1st.clip[[2]],pam.1st.clip[[3]])
+  fl.1st.clip <- which(list.files(path, pattern = "S20.*.wav")[grep(paste0(pam.1st.clip[[1]],"_"), list.files(path, pattern = "S20.*.wav"))] %in% pam.1st.clip[[2]])
   
   all.clip.starts <- first.clip.start + gaps
   starts.in.fls <- all.clip.starts - first.file.start
   
   dateYYYYmmdd <- substr(inPAMfile, start = 4, stop = 11)
   
-  rems <- (starts.in.fls-3594.82)%/%3594.82 + 2
+  ## THIS IS AN ERROR. ENDS UP AS 1 WHEN SHOULD BE 2 IF THE FIRST CLIP IS IN THE SECOND FILE...
+  rems <- (starts.in.fls-3594.82)%/%3594.82 + 2 + (fl.1st.clip - 1) #TO ACCOUNT FOR STARTING AFTER THE FIRST ONE...
+  #############################################################################################
   
   soundfiles=list.files(path, pattern = "S20.*.wav")
   kfls <- soundfiles[grep(paste0(getPAM,"_"), soundfiles)]
@@ -103,15 +106,17 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
   # Save data frame of soundfiles and start times
   if (tabulate==TRUE){
     newdets <- data.frame(selection = 1:length(fls), soundfile = fls, startClip = all.clip.starts.re.drift)
-    extend <- newdets[1,]$startClip - add
-    slctn <- 0
-    snd <- newdets[1,]$soundfile
-    if (extend < 0 ){
-      extend <- newdets[nrow(newdets),]$startClip + clipLength + add
-      slctn <- nrow(newdets) + 1
-      snd <- newdets[nrow(newdets),]$soundfile
-    }
+    if (add>0){
+      extend <- newdets[1,]$startClip - add
+      slctn <- 0
+      snd <- newdets[1,]$soundfile
+      if (extend < 0 ){
+        extend <- newdets[nrow(newdets),]$startClip + clipLength + add
+        slctn <- nrow(newdets) + 1
+        snd <- newdets[nrow(newdets),]$soundfile
+      }
     newdets <- rbind(newdets, c(slctn, snd, extend))
+    }
     newdets$startClip <- as.numeric(newdets$startClip)
     newdets$selection <- as.numeric(newdets$selection)
     newdets <- newdets[order(newdets$selection),]

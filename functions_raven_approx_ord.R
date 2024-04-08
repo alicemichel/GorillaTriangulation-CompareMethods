@@ -61,3 +61,13 @@ approxOrd <- function(Raven.selections.path, clipLength = 7, buffer = 0, path=".
   }
   return(df)
 }
+
+
+check_spectro <- function(df, rowid, buffer=0, clipLength=4){
+  for (i in rowid){
+    w <- read_wave(df[i,]$sound.files, from = max(0,df[i,]$start - buffer), to = df[i,]$start + clipLength)
+    viewSpec(w, interactive = F, units="seconds", frq.lim = c(0.1, 0.9), wl=2048, ovlp = 90, wn="hanning", main = paste(i, "\n", df[i,]$ordered.cuts, "\n", df[i,]$approxOrd))
+  }
+}
+
+
