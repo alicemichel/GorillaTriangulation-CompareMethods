@@ -24,14 +24,15 @@ localizedSBs <- list()
 for (sb in unique(lags$IndID)){
   lags1ind <- lags[lags$IndID==sb,]
   lags1ind$lag <- -lags1ind$lag
-  localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = 18) #how high up should temp be recorded? mic level I guess?
+  temperature = 18
+  localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = temperature) #how high up should temp be recorded? mic level I guess?
 }
 
 
 ## Compare to field localizations for accuracy metrics:
 
 ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
-fieldLocs <- read.csv("../fieldTraingLocs.csv")
+fieldLocs <- read.csv("../fieldTraingLocs.MethodsComparison.csv")
 ns = c(19,20)
 
 for (sbi in 1:length(unique(lags$IndID))){
@@ -57,8 +58,17 @@ for (sbi in 1:length(unique(lags$IndID))){
   cat("New method KDE optimum (weights points within xextr of grid equally):", "\n")
   print(dist2gorillaOpt[[1]])
   cat("\n\n\n")
+  
+  fieldLocs[ns[sbi],]$new.method.temp.set <- temperature
+  fieldLocs[ns[sbi],]$new.method.KDEopt <- dist2gorillaOpt[[1]]
+  fieldLocs[ns[sbi],]$new.method.best <- min(dist2gorilla)
+  fieldLocs[ns[sbi],]$new.method.best.pams <- win
+  fieldLocs[ns[sbi],]$closest.3.pams <- paste0(top3, collapse="")
+  fieldLocs[ns[sbi],]$new.method.xcors <- list.files(pattern=".xlsx")[1]
+  
 }
 
+#write.csv(fieldLocs, "../fieldTraingLocs.MethodsComparison.csv")
 
 
 
