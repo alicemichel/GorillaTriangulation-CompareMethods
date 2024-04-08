@@ -24,7 +24,7 @@ localizedSBs <- list()
 for (sb in unique(lags$IndID)){
   lags1ind <- lags[lags$IndID==sb,]
   lags1ind$lag <- -lags1ind$lag
-  localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = 23)
+  localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = 18) #how high up should temp be recorded? mic level I guess?
 }
 
 
@@ -39,17 +39,24 @@ for (sbi in 1:length(unique(lags$IndID))){
   gorilla <- fieldLocs[ns[sbi],c("X","Y")]
   dist2gorilla <- distGorMic(gorilla, localizedSBs[[sbi]]$intersection)
   dist2gorillaOpt <- distGorMic(gorilla, localizedSBs[[sbi]]$optimum)
-  plot(dist2gorilla, xaxt="n", xlab=NA, ylim=c(0,100), bty="l", las=1, ylab="Distance to actually found nest site", main=)
+  plot(dist2gorilla, xaxt="n", xlab=NA, ylim=c(0,30), bty="l", las=1, ylab="Distance to actually found nest site", main=)
   axis(1, at = 1:length(dist2gorilla), labels = localizedSBs[[sbi]]$intersection$pams, las=2)
   cat("Starting with individual...", fieldLocs[ns[sbi],]$Nest.Site.ID, "\n")
   cat("New method best:", "\n")
   print(min(dist2gorilla))
-  cat("Field best:", "\n")
+  cat("which was from PAM combo...")
+  win <- localizedSBs[[sbi]]$intersection[which(dist2gorilla==min(dist2gorilla)),]$pams
+  cat(win)
+  cat("\n3 closest pams would be...")
+  top3 <- rownames(xy[order(distGorMic(gorilla, xy)),])[1:3]
+  cat(top3, "...same?", all(stringr::str_detect(win,top3)))
+  cat("\n\nField best:", "\n")
   print(field.prec)
   cat("New method summary:", "\n")
   print(summary(dist2gorilla))
   cat("New method KDE optimum (weights points within xextr of grid equally):", "\n")
   print(dist2gorillaOpt[[1]])
+  cat("\n\n\n")
 }
 
 

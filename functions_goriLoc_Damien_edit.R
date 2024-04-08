@@ -22,22 +22,21 @@ hyperbolaComput <- function(p1, p2, dt, v=340, xvals= 1:999, yrange=c(-1000, 100
 #########################
 #########################
 
-goriLoc <- function(lags1ind, xy, xjump = 10, xextr = 2000, temperature, main=date){
+goriLoc <- function(lagdf.IndID.PAM.lag, mic.coords.rownames.pams, xjump = 10, xextr = 2000, temperature, main=date){
   
-  temperature = 25
   v = 331.5 * ((temperature + 273.15)/273.15)^0.5
   
-  pams.xy <- xy[rownames(xy) %in% unique(lags1ind$PAM),]
-  pams.xy <- pams.xy[complete.cases(pams.xy),]
-  pams.xy$PAM <- rownames(pams.xy)
+  pams.mic.coords.rownames.pams <- mic.coords.rownames.pams[rownames(mic.coords.rownames.pams) %in% unique(lagdf.IndID.PAM.lag$PAM),]
+  pams.mic.coords.rownames.pams <- pams.mic.coords.rownames.pams[complete.cases(pams.mic.coords.rownames.pams),]
+  pams.mic.coords.rownames.pams$PAM <- rownames(pams.mic.coords.rownames.pams)
   
-  x <- seq(min(pams.xy$lon) - xextr, max(pams.xy$lon) + xextr, xjump)
-  y <- seq(min(pams.xy$lat) - xextr, max(pams.xy$lat) + xextr, xjump)
+  x <- seq(min(pams.mic.coords.rownames.pams$lon) - xextr, max(pams.mic.coords.rownames.pams$lon) + xextr, xjump)
+  y <- seq(min(pams.mic.coords.rownames.pams$lat) - xextr, max(pams.mic.coords.rownames.pams$lat) + xextr, xjump)
   
   xvals = x
   yrange = c(y[1],y[length(y)])
   
-  pamCoords <- merge(pams.xy, lags1ind[,2:3], by="PAM")
+  pamCoords <- merge(pams.mic.coords.rownames.pams, lagdf.IndID.PAM.lag[,2:3], by="PAM")
   names(pamCoords) <- c("PAM","x","y","timeStamp")
   
   ans <- list()
@@ -94,13 +93,13 @@ goriLoc <- function(lags1ind, xy, xjump = 10, xextr = 2000, temperature, main=da
   
   # Format spatial for KDE:
   coordinates(intersecs) <- c("x", "y")
-  kud <- kernelUD(intersecs[-1], h="href")
+  kud <- kernelUD(intersecs[0], h="href")
   kud
   kdr <- raster::raster(kud)
-  plot(kdr, legend=FALSE, col=cm.colors(8, alpha=0.6), las=1, axes=T, xlim=range(xvals), ylim=yrange, main=paste(main, "- Individual", unique(lags1ind$IndID)))
-  points(xy, pch = 20)
-  text(xy, labels=rownames(xy), pos=1, cex=.75)
-  points(pams.xy, col="blue", cex=2)
+  plot(kdr, legend=FALSE, col=cm.colors(8, alpha=0.6), las=1, axes=T, xlim=range(xvals), ylim=yrange, main=paste(main, "- Individual", unique(lagdf.IndID.PAM.lag$IndID)))
+  points(mic.coords.rownames.pams, pch = 20)
+  text(mic.coords.rownames.pams, labels=rownames(mic.coords.rownames.pams), pos=1, cex=.75)
+  points(pams.mic.coords.rownames.pams, col="blue", cex=2)
   points(intersecsdf, col="red", pch=20)
   idx = raster::which.max(kdr)
   pos = raster::xyFromCell(kdr,idx)
