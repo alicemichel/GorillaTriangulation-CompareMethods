@@ -1,6 +1,7 @@
 
 # Need to do this before, don't need to run necessarily
 # source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/2_get_pairwise_lags.R")
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_goriLoc_Damien_edit.R")
 
 # should already be in the correct clock-drift time
 # and the right time gaps
@@ -20,6 +21,7 @@ xy <- read.csv("../xy2.csv", row.names=1)[,1:2] #csv of all the pams locations w
 localizedSBs <- list()
 for (sb in unique(lags$IndID)){
   lags1ind <- lags[lags$IndID==sb,]
+  lags1ind$lag <- -lags1ind$lag
   localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = 23)
 }
 
