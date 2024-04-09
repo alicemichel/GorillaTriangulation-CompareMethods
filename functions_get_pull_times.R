@@ -79,7 +79,8 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
   
   dateYYYYmmdd <- substr(inPAMfile, start = 4, stop = 11)
   
-  ## THIS IS AN ERROR. ENDS UP AS 1 WHEN SHOULD BE 2 IF THE FIRST CLIP IS IN THE SECOND FILE...
+  ## THIS HAD AN ERROR: ENDED UP AS 1 WHEN SHOULD BE 2 IF THE FIRST CLIP IS IN THE SECOND FILE...
+  ## IN TESTING!
   rems <- (starts.in.fls-3594.82)%/%3594.82 + 2 + (fl.1st.clip - 1) #TO ACCOUNT FOR STARTING AFTER THE FIRST ONE...
   #############################################################################################
   

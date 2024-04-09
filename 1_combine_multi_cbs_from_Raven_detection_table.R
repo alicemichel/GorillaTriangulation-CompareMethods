@@ -33,18 +33,18 @@ par(mfrow=c(1,1))
 
 ## prep sound files to do detections in Raven on the best PAM(s) per individual (may need to iteratively run approxOrd function to figure out which that is)
 
-relabelBARfiles(PAM="V")
-
+#relabelBARfiles(PAM="D")
+#grabLaCieBAR(date="S20221210", times=c(17:21), destn="test")
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-dets.long <- approxOrd(Raven.selections.path = "20221130_H.txt", buffer=2, clipLength = 7)
+dets.long <- approxOrd(Raven.selections.path = "20221210_D_E.txt", buffer=1, clipLength = 7)
 #check_spectro(dets.long, c(1,4,9,11,14,16:18,20,22,23:26,32))
 #saveRDS(dets.long, "dets20240331.rds")
 #dets.long <- readRDS("2024.04.07_20230206_individuals_J_U/dets20240331.rds")
 
 # take the cut column, subtract from start time, add the buffer
-dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=3)
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
 dets <- dets.long[2,] #[dets.long$pam==dets.long$ind,]

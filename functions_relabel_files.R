@@ -1,4 +1,26 @@
 
+grabLaCieBAR <- function(date, times, destn){
+  
+  path = "/Volumes/LaCie5/"
+  times.for.weird <- c(times[1]-1, times, times[length(times)]+1)
+  
+  fls <- list.files(path, recursive = T, pattern=date)
+  searchcode <- paste0(date, "T", times.for.weird, collapse="|")
+  flsIntime <- fls[grep(searchcode, fls)]
+  shortnames <- gsub(".*/", "", flsIntime)
+  ids <- sub(".*/","",sub("_.*", "", flsIntime))
+  idNames <- paste0(ids, "_", shortnames)
+  print(idNames)
+  cont <- readline("...Do thse names look right?")
+  res <- c()
+  if (cont == "T"){
+     res1 <- file.copy(from = paste0(path,flsIntime), to = paste0(destn, "/", idNames), copy.date = TRUE)
+     res <- c(res,res1)
+  }
+  return(res)
+}
+
+
 
 relabelBARfiles <- function(type="file", PAM=NULL){
   
