@@ -33,21 +33,21 @@ par(mfrow=c(1,1))
 
 ## prep sound files to do detections in Raven on the best PAM(s) per individual (may need to iteratively run approxOrd function to figure out which that is)
 
-relabelBARfiles(PAM="H")
+relabelBARfiles(PAM="V")
 
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-#dets.long <- approxOrd(Raven.selections.path = "20221128_Q.txt", buffer=1, clipLength = 6)
+dets.long <- approxOrd(Raven.selections.path = "20221130_H.txt", buffer=2, clipLength = 7)
 #check_spectro(dets.long, c(1,4,9,11,14,16:18,20,22,23:26,32))
 #saveRDS(dets.long, "dets20240331.rds")
-dets.long <- readRDS("2024.04.07_20230206_individuals_J_U/dets20240331.rds")
+#dets.long <- readRDS("2024.04.07_20230206_individuals_J_U/dets20240331.rds")
 
 # take the cut column, subtract from start time, add the buffer
-dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=3)
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
-dets <- dets.long[dets.long$pam==dets.long$ind,]
+dets <- dets.long[2,] #[dets.long$pam==dets.long$ind,]
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)

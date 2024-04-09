@@ -43,7 +43,9 @@ approxOrd <- function(Raven.selections.path, clipLength = 7, buffer = 0, path=".
     onOthers1$cut <- NA
     par(mfrow=c(2,1))
     for (j in rownames(onOthers1)){
-      tmpwv <- read_wave(onOthers1[j,]$sound.files, from = max(0, onOthers1[j,]$start - buffer), to = (onOthers1[j,]$start + clipLength))
+      wav <- readWave(onOthers1[j,]$sound.files, header=TRUE)
+      Hz.file.length <- wav$samples / wav$sample.rate
+      tmpwv <- read_wave(onOthers1[j,]$sound.files, from = max(0, onOthers1[j,]$start - buffer), to = min(onOthers1[j,]$start + clipLength,Hz.file.length))
       viewSpec(tmpwv, interactive = F, units="seconds", frq.lim = c(0.1, 0.9), wl=2048, ovlp = 90, wn="hanning", main = rownames(onOthers1[j,]))
       
       usr <- readline("start of chest beat:")

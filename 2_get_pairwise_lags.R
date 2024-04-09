@@ -1,5 +1,5 @@
 
-source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/1_combine_multi_cbs_from_Raven_detection_table.R")
+#source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/1_combine_multi_cbs_from_Raven_detection_table.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_prep4Raven.R")
 
 # Above should be set from running previous
