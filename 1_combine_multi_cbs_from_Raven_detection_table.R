@@ -38,17 +38,13 @@ par(mfrow=c(1,1))
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-dets.long <- approxOrd(Raven.selections.path = "20221210_D_E_M_J_O_N_V.txt", buffer=2, clipLength = 6)
+#dets.long <- approxOrd(Raven.selections.path = "20221210_D_E_M_J_O_N_V.txt", buffer=2, clipLength = 6)
 #saveRDS(dets.long, "dets20240413.rds")
 #dets.long <- readRDS("2024.04.07_20230206_individuals_J_U/dets20240331.rds")
 
-#Check over the individual splits
-Ds <- dets.long[dets.long$ind %in% c("D", "N", "B", "P"),]
-check_spectro(Ds, 1:42)
-
 #writexl::write_xlsx(dets.long, "20221210.xlsx")
 dets.edit <- as.data.frame(readxl::read_excel("20221210.xlsx"))
-check_spectro(dets.edit, 122)
+#check_spectro(dets.edit, 122)
 
 dets.long <- dets.edit[is.na(dets.edit$check) | dets.edit$check!="nothing",]
 
@@ -58,25 +54,24 @@ dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
 dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip)-19*3600)
 
 dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==dets.long$ind
-View(dets.long[,c("sound.files", "ind", "ordered.cuts", "check.full.st", "approxOrd", "check.ind")])
+#View(dets.long[,c("sound.files", "ind", "ordered.cuts", "check.full.st", "approxOrd", "check.ind")])
 rms <- c(66,5,95,96,97,42,114,98,99,15,16,43,100,58,17,101,19,102,59,20,103,104,21,61,88,26,110,29,93,30)
 dets.long[rownames(dets.long)==111,]$ind = "B"
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
 dets <- dets.long[!rownames(dets.long) %in% rms,] #[dets.long$pam==dets.long$ind,]
 View(dets[,c("sound.files", "ind", "check.full.st", "approxOrd", "check.ind")])
-check_spectro(dets, 63)
-
+#check_spectro(dets, 63)
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
 
-inds <- unique(dets$ind)
+(inds <- unique(dets$ind))
 pamID <- unique(substr(list.files(".", pattern = "S20.*.wav"), start = 1, stop = 1)) # reflects sound files present in the folder
 
 start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
 
-len = 4 #make >7 if hoots are included, since it'll shift the others way back (hoots up to like 6 secs pre-CB...)
+len = 6 #make >7 if hoots are included, since it'll shift the others way back (hoots up to like 6 secs pre-CB...)
 # To get len, take the max selection length. Add the max expected lag based on the max distance. Then add the expected length of a distant CB (2.5sec) to that...
 
 printwindow = 40

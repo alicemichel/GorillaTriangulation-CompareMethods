@@ -30,7 +30,9 @@ plotConseq <- function(dets.ordered, start0=TRUE){
   
   par(mfrow=c(2,1), mar=c(0,5,2,1), oma=c(4,0,0,0))
   
-  plot(dets[dets$ind==ind1,]$fullTimeFromClipStart, 1:nrow(dets[dets$ind==ind1,]), bty="l", pch=21, las=1, type="b", lwd=1.75, xaxt="n", xlab=NA, ylab="Cumulative # chest beats\nper individual", main=paste("Individuals chest beating on", start.date), xlim=c(min(dets$fullTimeFromClipStart)-1, max(dets$fullTimeFromClipStart)+1), ylim=c(0,max(table(dets$ind))))
+  plot(dets[dets$ind==ind1,]$fullTimeFromClipStart, 1:nrow(dets[dets$ind==ind1,]), bty="l", pch=20, las=1, xaxt="n", xlab=NA, ylab="Cumulative # chest beats\nper individual", main=paste("Individuals chest beating on", start.date), xlim=c(min(dets$fullTimeFromClipStart)-1, max(dets$fullTimeFromClipStart)+1), ylim=c(0,max(table(dets$ind))))
+  lines(dets[dets$ind==ind1,]$fullTimeFromClipStart, 1:nrow(dets[dets$ind==ind1,]))
+  
   
   dets$colvec <- ifelse(dets$ind==ind1,1,NA)
   
@@ -39,7 +41,7 @@ plotConseq <- function(dets.ordered, start0=TRUE){
   #count number of ind1 before the next ind for every next ind
   for (other in otherinds){
     
-    dets[which(dets$ind %in% otherinds),]$colvec <- which(other %in% otherinds)+1
+    dets[which(dets$ind %in% other),]$colvec <- which(otherinds %in% other)+1
     
     tbi <- tb[tb$Var1==other & tb$Freq==1,]
     first1 <- as.POSIXct(tbi[1,]$Var2, "%Y-%m-%d %H:%M:%S")
@@ -50,7 +52,8 @@ plotConseq <- function(dets.ordered, start0=TRUE){
       cntb4=1
     }
     
-    points(dets[dets$ind==other,]$fullTimeFromClipStart, cntb4:(nrow(dets[dets$ind==other,])+cntb4-1), bty="l", pch=21, type="b", lwd=1.75, col=palette()[which(other %in% otherinds)+1])
+    points(dets[dets$ind==other,]$fullTimeFromClipStart, cntb4:(nrow(dets[dets$ind==other,])+cntb4-1), pch=20, col=palette()[which(otherinds %in% other)+1])
+    lines(dets[dets$ind==other,]$fullTimeFromClipStart, cntb4:(nrow(dets[dets$ind==other,])+cntb4-1), lwd=1, col=palette()[which(otherinds %in% other)+1])
   }
   legend("topleft", cex = 1.1, inset = 0.05, title.adj = 0, legend=inds, col=palette()[1:length(inds)], pch=15, bty="n", title = "Individuals")
   
