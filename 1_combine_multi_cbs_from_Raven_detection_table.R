@@ -34,20 +34,38 @@ par(mfrow=c(1,1))
 ## prep sound files to do detections in Raven on the best PAM(s) per individual (may need to iteratively run approxOrd function to figure out which that is)
 
 #relabelBARfiles(PAM="D")
-#grabLaCieBAR(date="S20221210", times=c(17:21), destn="test")
+#grabLaCieBAR(date="S20221210", times=c(17:21), destn=".") #make sure you're in the right directory!
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-dets.long <- approxOrd(Raven.selections.path = "20221210_D_E.txt", buffer=1, clipLength = 7)
-#check_spectro(dets.long, c(1,4,9,11,14,16:18,20,22,23:26,32))
-#saveRDS(dets.long, "dets20240331.rds")
+dets.long <- approxOrd(Raven.selections.path = "20221210_D_E_M_J_O_N_V.txt", buffer=2, clipLength = 6)
+#saveRDS(dets.long, "dets20240413.rds")
 #dets.long <- readRDS("2024.04.07_20230206_individuals_J_U/dets20240331.rds")
+
+#Check over the individual splits
+Ds <- dets.long[dets.long$ind %in% c("D", "N", "B", "P"),]
+check_spectro(Ds, 1:42)
+
+#writexl::write_xlsx(dets.long, "20221210.xlsx")
+dets.edit <- as.data.frame(readxl::read_excel("20221210.xlsx"))
+check_spectro(dets.edit, 122)
+
+dets.long <- dets.edit[is.na(dets.edit$check) | dets.edit$check!="nothing",]
 
 # take the cut column, subtract from start time, add the buffer
 dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
 
+dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip)-19*3600)
+
+dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==dets.long$ind
+View(dets.long[,c("sound.files", "ind", "ordered.cuts", "check.full.st", "approxOrd", "check.ind")])
+rms <- c(66,5,95,96,97,42,114,98,99,15,16,43,100,58,17,101,19,102,59,20,103,104,21,61,88,26,110,29,93,30)
+
+
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
-dets <- dets.long[2,] #[dets.long$pam==dets.long$ind,]
+dets <- dets.long[!rownames(dets.long) %in% rms,] #[dets.long$pam==dets.long$ind,]
+View(dets[,c("sound.files", "ind", "check.full.st", "approxOrd", "check.ind")])
+check_spectro(dets, 63)
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
