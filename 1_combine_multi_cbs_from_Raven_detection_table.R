@@ -60,12 +60,13 @@ dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.f
 dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==dets.long$ind
 View(dets.long[,c("sound.files", "ind", "ordered.cuts", "check.full.st", "approxOrd", "check.ind")])
 rms <- c(66,5,95,96,97,42,114,98,99,15,16,43,100,58,17,101,19,102,59,20,103,104,21,61,88,26,110,29,93,30)
-
+dets.long[rownames(dets.long)==111,]$ind = "B"
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
 dets <- dets.long[!rownames(dets.long) %in% rms,] #[dets.long$pam==dets.long$ind,]
 View(dets[,c("sound.files", "ind", "check.full.st", "approxOrd", "check.ind")])
 check_spectro(dets, 63)
+
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
