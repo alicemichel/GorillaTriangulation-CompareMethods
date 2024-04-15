@@ -1,5 +1,5 @@
 
-ravenprep <- function(CBdetsList, clipLength, savewvs=TRUE, detbegin=rep(0, length(CBdetsList)), detlim=rep(NA, length(CBdetsList))){ #change var names so they don't match what's in code
+ravenprep <- function(CBdetsList, clipLength, inds, savewvs=TRUE, detbegin=rep(0, length(CBdetsList)), detlim=rep(NA, length(CBdetsList))){ #change var names so they don't match what's in code
   subDir = paste0(gsub("-",".",Sys.Date()), "_", substr(CBdetsList[[1]]$detections$sound.files[1], start=4, stop=11), "_individuals_", paste0(names(CBdetsList), collapse="_"))
   if (!file.exists(subDir)){
     dir.create(file.path(subDir))
@@ -11,7 +11,7 @@ ravenprep <- function(CBdetsList, clipLength, savewvs=TRUE, detbegin=rep(0, leng
     CBdetsList[[k]][-(1:3)] = lapply(CBdetsList[[k]][-(1:3)], FUN = function(x) x[1:detlim[ki],])
     CBdetsList[[k]][-(1:3)] = lapply(CBdetsList[[k]][-(1:3)], FUN = function(x) x[detbegin[ki]:nrow(x),])
     wavlist[[k]] <- lapply(CBdetsList[[k]][-(1:3)], FUN = function(x) {df2mergedWav(x, clipLength)})
-    if (length(unique(lapply(wavlist[[k]], FUN = function(x) duration(x))))!=1){
+    if (length(unique(lapply(wavlist[[k]], FUN = function(x) round(duration(x)))))!=1){
       stop(paste("ERROR in", k, " -- The files are not the same length! \n Consider reducing the length of each clip or implementing a limit on the first or last detections (former is less recommended due to initial buffer)."))
     }
     for (w in 1:length(wavlist[[k]])){

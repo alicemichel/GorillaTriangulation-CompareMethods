@@ -10,7 +10,7 @@ source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason
 # making the lags "real-time"
 # so, theoretically, with only those we should be able to triangulate...
 
-setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.08_20221130_individuals_H//")
+setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.13_20221210_individuals_D_E_J_M_V_Vclap//")
 (lags <- readxl::read_excel(list.files(pattern=".xlsx")))
 
 ## Set up for triangulation:
@@ -33,7 +33,7 @@ for (sb in unique(lags$IndID)){
 
 ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
 fieldLocs <- read.csv("../fieldTraingLocs.MethodsComparison.csv")
-ns = 2
+ns = 3
 
 for (sbi in 1:length(unique(lags$IndID))){
   field.prec <- fieldLocs[ns[sbi],]$Precision.m
@@ -67,7 +67,8 @@ for (sbi in 1:length(unique(lags$IndID))){
   fieldLocs[ns[sbi],]$new.method.xcors <- list.files(pattern=".xlsx")[1]
   
 }
-fieldLocs[ns,]$office.notes <- "only 1 CB, so this is the old method, with using more careful x-corr"
+fieldLocs[ns,]$office.notes <- "big time gap! not very careful xcor"
+#write.csv(fieldLocs, "../fieldTraingLocs.MethodsComparison.csv")
 
 fieldLocs <- fieldLocs[fieldLocs$X>0,]
 # pdf("../fieldlocs.pdf", width=10, height=7)

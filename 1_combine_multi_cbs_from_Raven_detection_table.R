@@ -49,7 +49,7 @@ dets.edit <- as.data.frame(readxl::read_excel("20221210.xlsx"))
 dets.long <- dets.edit[is.na(dets.edit$check) | dets.edit$check!="nothing",]
 
 # take the cut column, subtract from start time, add the buffer
-dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=1)
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=2)
 
 dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip)-19*3600)
 
@@ -57,16 +57,21 @@ dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==dets.long
 #View(dets.long[,c("sound.files", "ind", "ordered.cuts", "check.full.st", "approxOrd", "check.ind")])
 rms <- c(66,5,95,96,97,42,114,98,99,15,16,43,100,58,17,101,19,102,59,20,103,104,21,61,88,26,110,29,93,30)
 dets.long[rownames(dets.long)==111,]$ind = "B"
+dets.long$ind <- ifelse(dets.long$ind %in% c("D", "B", "N"), "D", dets.long$ind)
 
 # keep only the rows where the focal PAM matches the nearest-to-individual PAM:
 dets <- dets.long[!rownames(dets.long) %in% rms,] #[dets.long$pam==dets.long$ind,]
-View(dets[,c("sound.files", "ind", "check.full.st", "approxOrd", "check.ind")])
+#View(dets[,c("sound.files", "ind", "check.full.st", "approxOrd", "check.ind")])
 #check_spectro(dets, 63)
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
 
-(inds <- unique(dets$ind))
+# Order the detections
+dets <- dets[order(fullTimeFromClipStart(sound.path = dets$sound.files, clip.start = dets$startClip)),]
+
+(inds <- sort(unique(dets$ind)))
+#inds <- c("D", "E", "M", "V")
 pamID <- unique(substr(list.files(".", pattern = "S20.*.wav"), start = 1, stop = 1)) # reflects sound files present in the folder
 
 start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
@@ -82,17 +87,24 @@ plotConseq(dets)
 dev.off()
 plotConseq(dets)
 
+doyouhavemultplpamsperCB="NO"
+
 CBs <- as.list(inds)
 names(CBs) <- inds
-par(mfrow=c(length(inds),1))
+par(mfrow=c(length(inds),1), mar=c(4,4,2,0))
 for (c in 1:length(CBs)){ 
   
   ## isolate the detections of individual "c":
-  detections.of.ind <- CBs[[c]]$detections <- dets[substr(dets$approxOrd, start = 1, stop = 1) == inds[c],]
+  detections.of.ind <- CBs[[c]]$detections <- dets[dets$ind == inds[c],]
   
   ## pick 1 PAM and fix the time gaps based on ALL its detections. This is the PAM you should have the max number of detections for that individual:
-  key.pam <- names(CBs)[c] #here the CBs are handily named by the closest PAM
-  dets.key.pam <- detections.of.ind[detections.of.ind$pam==key.pam,]
+  key.pam <- substr(names(CBs)[c], start=1, stop=1) #here the CBs are handily named by the closest PAM
+  
+  dets.key.pam <- detections.of.ind
+  ############## IMPORTANT: ABOVE CHANGE BACK IF YOU HAVE MULTIPLE DETECTIONS
+  if (doyouhavemultplpamsperCB=="yes"){
+    dets.key.pam <- detections.of.ind[detections.of.ind$pam==key.pam,]
+  }
   
   # Get the start time of the first detection within the file:
   first.clip.t.key <- dets.key.pam[1,]$startClip.GPS

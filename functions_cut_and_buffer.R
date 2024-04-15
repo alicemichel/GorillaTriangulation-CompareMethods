@@ -17,7 +17,7 @@ plotConseq <- function(dets.ordered, start0=TRUE){
   dets <- dets.ordered
   
   start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
-  inds=unique(dets$ind)
+  inds=sort(unique(dets$ind))
   
   # plot the consecutive chest beats of each individual over one another
   dets$fullTimeFromClipStart <- as.POSIXct(start.date, format = "%Y%m%d", tz = "GMT") + fullTimeFromClipStart(dets$sound.files,dets$startClip.GPS)

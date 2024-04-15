@@ -1,5 +1,7 @@
+# load libraries and functions
 library(rootSolve)
 library(adehabitatHR)
+
 
 hyperbolaComput <- function(p1, p2, dt, v=340, xvals= 1:999, yrange=c(-1000, 1000)){
   x1 <- p1[1]
@@ -22,7 +24,7 @@ hyperbolaComput <- function(p1, p2, dt, v=340, xvals= 1:999, yrange=c(-1000, 100
 #########################
 #########################
 
-goriLoc <- function(lagdf.IndID.PAM.lag, mic.coords.rownames.pams, xjump = 10, xextr = 2000, temperature, main=date){
+goriLoc <- function(lagdf.IndID.PAM.lag, mic.coords.rownames.pams, xjump = 10, xextr = 500, temperature, main=date){
   
   v = 331.5 * ((temperature + 273.15)/273.15)^0.5
   
@@ -94,9 +96,11 @@ goriLoc <- function(lagdf.IndID.PAM.lag, mic.coords.rownames.pams, xjump = 10, x
   # Format spatial for KDE:
   coordinates(intersecs) <- c("x", "y")
   kud <- kernelUD(intersecs[0], h="href")
-  kud
   kdr <- raster::raster(kud)
-  plot(kdr, legend=FALSE, col=cm.colors(8, alpha=0.6), las=1, axes=T, xlim=range(xvals), ylim=yrange, main=paste(main, "- Individual", unique(lagdf.IndID.PAM.lag$IndID)))
+  plot(x = range(xvals), y = yrange, type="n", main=paste(main, "- Individual", unique(lagdf.IndID.PAM.lag$IndID)), 
+       las=1, xlab=NA, ylab=NA)
+  alPal <- colorRampPalette(c('white','magenta'))
+  plot(kdr, legend=FALSE, col=alPal(8), add=T)
   points(mic.coords.rownames.pams, pch = 20)
   text(mic.coords.rownames.pams, labels=rownames(mic.coords.rownames.pams), pos=1, cex=.75)
   points(pams.mic.coords.rownames.pams, col="blue", cex=2)
@@ -105,6 +109,7 @@ goriLoc <- function(lagdf.IndID.PAM.lag, mic.coords.rownames.pams, xjump = 10, x
   pos = raster::xyFromCell(kdr,idx)
   points(pos, col="blue", pch=8, cex=2, lwd=3)
   legend("bottom", inset = 0.05, pch=8, legend=paste(round(pos,1), collapse=","), box.lwd = 0.5, col="blue")
+  
   
   return(list(intersection = intersecsdf, hyperbola = ans, optimum = pos))
 }
