@@ -10,7 +10,7 @@ source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason
 # making the lags "real-time"
 # so, theoretically, with only those we should be able to triangulate...
 
-setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.13_20221210_individuals_D_E_J_M_V_Vclap//")
+setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.15_20221210_individuals_E_J_V_Mdef_Mmb_Dpok_Dsm_Vclap/")
 (lags <- readxl::read_excel(list.files(pattern=".xlsx")))
 
 ## Set up for triangulation:
@@ -23,7 +23,7 @@ xy <- read.csv("../xy2.csv", row.names=1)[,1:2] #csv of all the pams locations w
 localizedSBs <- list()
 for (sb in unique(lags$IndID)){
   lags1ind <- lags[lags$IndID==sb,]
-  lags1ind$lag <- -lags1ind$lag
+  lags1ind$lag <- -(as.numeric(lags1ind$lag))
   temperature = 18
   localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = temperature) #how high up should temp be recorded? mic level I guess?
 }
@@ -33,6 +33,7 @@ for (sb in unique(lags$IndID)){
 
 ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
 fieldLocs <- read.csv("../fieldTraingLocs.MethodsComparison.csv")
+#points(fieldLocs[,3])
 ns = 3
 
 for (sbi in 1:length(unique(lags$IndID))){

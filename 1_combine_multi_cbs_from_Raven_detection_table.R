@@ -44,17 +44,17 @@ pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
 #writexl::write_xlsx(dets.long, "20221210.xlsx")
 dets.edit <- as.data.frame(readxl::read_excel("20221210.xlsx"))
-#check_spectro(dets.edit, 122)
 
 dets.long <- dets.edit[is.na(dets.edit$check) | dets.edit$check!="nothing",]
 
 # take the cut column, subtract from start time, add the buffer
-dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=2)
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=4)
 
+# Cleaning particular to each night
 dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip)-19*3600)
-
 dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==dets.long$ind
 #View(dets.long[,c("sound.files", "ind", "ordered.cuts", "check.full.st", "approxOrd", "check.ind")])
+#check_spectro(dets.edit, 122)
 rms <- c(66,5,95,96,97,42,114,98,99,15,16,43,100,58,17,101,19,102,59,20,103,104,21,61,88,26,110,29,93,30)
 dets.long[rownames(dets.long)==111,]$ind = "B"
 dets.long$ind <- ifelse(dets.long$ind %in% c("D", "B", "N"), "D", dets.long$ind)
