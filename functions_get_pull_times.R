@@ -70,19 +70,20 @@ pullFromPam <- function(fullTimeSecondsToGet, dateYYYYmmdd, getPAM, clipLength, 
 mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLength=len, path=".", tabulate=FALSE, keyPAMstarts4check, add=10){
   
   pam.1st.clip <- pullTime(clip.start, inPAMfile, getPAM, clipLength, plot=FALSE, clockfix=FALSE) #FALSE=GPS time
-  first.file.start <- fullTimeFromClipStart(pam.1st.clip[[2]],0)
+  #first.file.start <- fullTimeFromClipStart(pam.1st.clip[[2]],0)
   first.clip.start <- fullTimeFromClipStart(pam.1st.clip[[2]],pam.1st.clip[[3]])
   fl.1st.clip <- which(list.files(path, pattern = "S20.*.wav")[grep(paste0(pam.1st.clip[[1]],"_"), list.files(path, pattern = "S20.*.wav"))] %in% pam.1st.clip[[2]])
   
   all.clip.starts <- first.clip.start + gaps
-  starts.in.fls <- all.clip.starts - first.file.start
+  #starts.in.fls <- all.clip.starts - first.file.start
   
   dateYYYYmmdd <- substr(inPAMfile, start = 4, stop = 11)
   
   ## THIS HAD AN ERROR: ENDED UP AS 1 WHEN SHOULD BE 2 IF THE FIRST CLIP IS IN THE SECOND FILE...
   ## IN TESTING!
-  rems <- (starts.in.fls-3594.82)%/%3594.82 + 2 + (fl.1st.clip - 1) #TO ACCOUNT FOR STARTING AFTER THE FIRST ONE...
+  #rems <- (starts.in.fls-3594.82)%/%3594.82 + 2 + (fl.1st.clip - 1) #TO ACCOUNT FOR STARTING AFTER THE FIRST ONE...
   #############################################################################################
+  ## NEED TO DO THIS USING THE TIMES IN THE FILES - doesn't work if there's a gap
   
   soundfiles=list.files(path, pattern = "S20.*.wav")
   kfls <- soundfiles[grep(paste0(getPAM,"_"), soundfiles)]
@@ -90,8 +91,19 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
   kfls = kfls[daytext == dateYYYYmmdd] # exclude other days -- could be a problem for midnight to 1am
   kfls = kfls[nchar(kfls)==81] # exclude cut files from processing.
 
+  rems <- c()
+  all.clip.starts1 <- c()
+  for (inst in 1:length(all.clip.starts)){
+    difs <- all.clip.starts[inst] - fullTimeFromClipStart(kfls,0)
+    rems[inst] <- m <- which(difs==min(difs[difs>0]))
+    if (min(difs[difs>0])>3594.82){
+      stop(paste("On PAM", pam, "between files, so remove from dets for x-corr row number", inst))
+      rems[inst] <- m2 <- which(abs(difs)==min(abs(difs[difs!=difs[m]])))
+    }
+    fl <- kfls[rems[inst]]
+    all.clip.starts1 <- c(all.clip.starts1, max(0, all.clip.starts[inst] - fullTimeFromClipStart(fl,0)))
+  }
   fls <- kfls[rems]
-  all.clip.starts1 <- all.clip.starts - fullTimeFromClipStart(fls,0)
   
   ## Clock drift correction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Here, go from GPS "true" time back to Hz-based "raw" time within each PAM:

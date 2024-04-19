@@ -13,6 +13,7 @@ approxOrd <- function(Raven.selections.path, clipLength = 7, buffer = 0, path=".
   df$ind <- NA
   df$min.cut <- NA
   df$ordered.cuts <- NA
+  df$note <- NA
     
   for (i in 1:num){
     
@@ -60,6 +61,11 @@ approxOrd <- function(Raven.selections.path, clipLength = 7, buffer = 0, path=".
     df[i,]$ind <- substr(df[i,]$approxOrd, start=1, stop=1)
     df[i,]$min.cut <- ordered[1,]$cut
     df[i,]$ordered.cuts <- paste(ordered$cut, collapse = "_")
+    df[i,]$note <- readline("ENTER NOTES HERE:")
+    
+    #write to csv as you go:
+    write.csv(df, paste0(path, "/ordering.csv"))
+    
   }
   return(df)
 }
