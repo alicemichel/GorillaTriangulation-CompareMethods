@@ -10,7 +10,7 @@ source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason
 # making the lags "real-time"
 # so, theoretically, with only those we should be able to triangulate...
 
-setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.15_20221210_individuals_E_J_V_Mdef_Mmb_Dpok_Dsm_Vclap/")
+setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.21_20230116_individuals_B1_B2_D1_D2_V/")
 (lags <- readxl::read_excel(list.files(pattern=".xlsx")))
 
 ## Set up for triangulation:
@@ -20,12 +20,19 @@ xy <- read.csv("../xy2.csv", row.names=1)[,1:2] #csv of all the pams locations w
 
 ## Run triangulation and save output as lists and inspect plots:
 
+## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
+fieldLocs <- read.csv("../fieldTraingLocs.MethodsComparison.csv")
+#points(fieldLocs[,3])
+ns = 4
+gorilla <- fieldLocs[ns,c("X","Y")] #the gorilla in question, near PAM J
+
 localizedSBs <- list()
-for (sb in unique(lags$IndID)){
+for (sb in unique(lags[!is.na(lags$lag),]$IndID)){
   lags1ind <- lags[lags$IndID==sb,]
   lags1ind$lag <- -(as.numeric(lags1ind$lag))
   temperature = 18
   localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = temperature) #how high up should temp be recorded? mic level I guess?
+  points(gorilla, pch=25, cex=1.5)
 }
 
 
@@ -34,14 +41,14 @@ for (sb in unique(lags$IndID)){
 ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
 fieldLocs <- read.csv("../fieldTraingLocs.MethodsComparison.csv")
 #points(fieldLocs[,3])
-ns = 3
-
-for (sbi in 1:length(unique(lags$IndID))){
+ns = rep(4,5)
+for (sbi in 1:length(unique(lags[!is.na(lags$lag),]$IndID))){
+  print(unique(lags[!is.na(lags$lag),]$IndID)[sbi])
   field.prec <- fieldLocs[ns[sbi],]$Precision.m
   gorilla <- fieldLocs[ns[sbi],c("X","Y")]
   dist2gorilla <- distGorMic(gorilla, localizedSBs[[sbi]]$intersection)
   dist2gorillaOpt <- distGorMic(gorilla, localizedSBs[[sbi]]$optimum)
-  plot(dist2gorilla, xaxt="n", xlab=NA, ylim=c(0,30), bty="l", las=1, ylab="Distance to actually found nest site", main=)
+  plot(dist2gorilla, xaxt="n", xlab=NA, ylim=c(0,50), bty="l", las=1, ylab="Distance to actually found nest site", main=unique(lags[!is.na(lags$lag),]$IndID)[sbi])
   axis(1, at = 1:length(dist2gorilla), labels = localizedSBs[[sbi]]$intersection$pams, las=2)
   cat("Starting with individual...", fieldLocs[ns[sbi],]$Nest.Site.ID, "\n")
   cat("New method best:", "\n")
@@ -49,6 +56,7 @@ for (sbi in 1:length(unique(lags$IndID))){
   cat("which was from PAM combo...")
   win <- localizedSBs[[sbi]]$intersection[which(dist2gorilla==min(dist2gorilla)),]$pams
   cat(win)
+  points(localizedSBs[[sbi]]$intersection[which(dist2gorilla==min(dist2gorilla)),], col="darkred", pch=16)
   cat("\n3 closest pams would be...")
   top3 <- rownames(xy[order(distGorMic(gorilla, xy)),])[1:3]
   cat(top3, "...same?", all(stringr::str_detect(win,top3)))
@@ -70,6 +78,13 @@ for (sbi in 1:length(unique(lags$IndID))){
 }
 fieldLocs[ns,]$office.notes <- "big time gap! not very careful xcor"
 #write.csv(fieldLocs, "../fieldTraingLocs.MethodsComparison.csv")
+
+
+pams2check <- pam.xy[rownames(pam.xy)%in%c(unique(lags1ind$PAM)),]
+pams2check$dist2gorilla <- distGorMic(gorilla, pams2check)
+pams2check$time2gorilla <- pams2check$dist2gorilla/340
+pams2check$lagExp = pams2check$time2gorilla - min(pams2check$time2gorilla)
+pams2check
 
 fieldLocs <- fieldLocs[fieldLocs$X>0,]
 # pdf("../fieldlocs.pdf", width=10, height=7)

@@ -33,36 +33,41 @@ par(mfrow=c(1,1))
 
 ## prep sound files to do detections in Raven on the best PAM(s) per individual (may need to iteratively run approxOrd function to figure out which that is)
 
-#relabelBARfiles(PAM="D")
-#grabLaCieBAR(date="S20221210", times=c(17:21), destn=".") #make sure you're in the right directory!
+#relabelBARfiles(PAM="R")
+#grabLaCieBAR(date="S20230116", times=c(16:22), lacienumber = 8, destn=".") #make sure you're in the right directory!
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-#dets.long <- approxOrd(Raven.selections.path = "20221210_D_E_M_J_O_N_V.txt", buffer=2, clipLength = 6)
-#saveRDS(dets.long, "dets20240413.rds")
-#dets.long <- readRDS("2024.04.07_20230206_individuals_J_U/dets20240331.rds")
+#dets.long <- approxOrd(Raven.selections.path = "20230116_V.txt", buffer=2, clipLength = 6)
+#saveRDS(dets.long, "dets20240418.rds")
+dets.long <- readRDS("dets20240418.rds")
 
 #writexl::write_xlsx(dets.long, "20221210.xlsx")
-dets.edit <- as.data.frame(readxl::read_excel("20221210.xlsx"))
+#dets.edit <- as.data.frame(readxl::read_excel("20221210.xlsx"))
+#dets.long <- dets.edit[is.na(dets.edit$check) | dets.edit$check!="nothing",]
 
-dets.long <- dets.edit[is.na(dets.edit$check) | dets.edit$check!="nothing",]
+unique(dets.long$note)
+dets.D <- dets.long[!is.na(dets.long$note) & dets.long$note %in% c("DBNP box weak", "DBNP box"), ] #remove "D, but no other files", for everything but the plot
+dets.D$ind="D"
+dets.VO <- dets.long[!is.na(dets.long$note) & dets.long$note == "VO" & dets.long$pam=="V", ]
+dets.B <- dets.long[!is.na(dets.long$note) & dets.long$note %in% c("BD","BD hoot and ground", "BD box", "BD hoot", "BD, and/or check U", "BD box weak", "BD weak", "BD box, but cut off so maybe not, check N", "BD low"), ]
+dets.B$ind="BD"
+dets.long <- rbind(dets.B, dets.D, dets.VO)
 
 # take the cut column, subtract from start time, add the buffer
-dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=4)
+dets.long$min.cut = ifelse(is.na(dets.long$min.cut), 2, dets.long$min.cut)
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=6) #6 for V, 4 for Bs and Ds
 
 # Cleaning particular to each night
-dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip)-19*3600)
+dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip))
 dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==dets.long$ind
-#View(dets.long[,c("sound.files", "ind", "ordered.cuts", "check.full.st", "approxOrd", "check.ind")])
-#check_spectro(dets.edit, 122)
-rms <- c(66,5,95,96,97,42,114,98,99,15,16,43,100,58,17,101,19,102,59,20,103,104,21,61,88,26,110,29,93,30)
-dets.long[rownames(dets.long)==111,]$ind = "B"
-dets.long$ind <- ifelse(dets.long$ind %in% c("D", "B", "N"), "D", dets.long$ind)
 
-# keep only the rows where the focal PAM matches the nearest-to-individual PAM:
-dets <- dets.long[!rownames(dets.long) %in% rms,] #[dets.long$pam==dets.long$ind,]
-#View(dets[,c("sound.files", "ind", "check.full.st", "approxOrd", "check.ind")])
-#check_spectro(dets, 63)
+dets <- dets.long
+
+#split by time since there's a huge gap
+dets$ind <- ifelse(dets$ind=="D" & dets$check.full.st>70148.70, "D2", ifelse(dets$ind=="D", "D1", dets$ind))
+dets$ind <- ifelse(dets$ind=="BD" & dets$check.full.st>70148.70, "B2", ifelse(dets$ind=="BD", "B1", dets$ind))
+dets[rownames(dets)==77,]$ind <- "D1"
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
@@ -82,9 +87,9 @@ len = 6 #make >7 if hoots are included, since it'll shift the others way back (h
 printwindow = 40
 
 # plot the consecutive chest beats of each individual over one another
-pdf(paste0(format(Sys.time(), "%Y%m%d_%H%M%S"), "_consec.pdf"), width=12, height=8)
+#pdf(paste0(format(Sys.time(), "%Y%m%d_%H%M%S"), "_consec.pdf"), width=12, height=8)
 plotConseq(dets)
-dev.off()
+#dev.off()
 plotConseq(dets)
 
 doyouhavemultplpamsperCB="NO"
@@ -93,9 +98,18 @@ CBs <- as.list(inds)
 names(CBs) <- inds
 par(mfrow=c(length(inds),1), mar=c(4,4,2,0))
 for (c in 1:length(CBs)){ 
+  print(c)
   
   ## isolate the detections of individual "c":
   detections.of.ind <- CBs[[c]]$detections <- dets[dets$ind == inds[c],]
+  
+  ## remove rows in between files so they don't mess up xcorr due to length diffs, as commanded below
+  if (c==1){
+    detections.of.ind <- CBs[[c]]$detections <- detections.of.ind[-11,]
+  }
+  if (c==5){
+    detections.of.ind <- CBs[[c]]$detections <- detections.of.ind[-2,]
+  }
   
   ## pick 1 PAM and fix the time gaps based on ALL its detections. This is the PAM you should have the max number of detections for that individual:
   key.pam <- substr(names(CBs)[c], start=1, stop=1) #here the CBs are handily named by the closest PAM
