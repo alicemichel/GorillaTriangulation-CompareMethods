@@ -27,14 +27,21 @@ ns = 4
 gorilla <- fieldLocs[ns,c("X","Y")] #the gorilla in question, near PAM J
 
 localizedSBs <- list()
+optima <- data.frame()
+#optima <- read.csv("appendingLocs.csv")
 for (sb in unique(lags[!is.na(lags$lag),]$IndID)){
   lags1ind <- lags[lags$IndID==sb,]
   lags1ind$lag <- -(as.numeric(lags1ind$lag))
   temperature = 18
   localizedSBs[[sb]] <- goriLoc(lags1ind, xy, main=date, temperature = temperature) #how high up should temp be recorded? mic level I guess?
   points(gorilla, pch=25, cex=1.5)
+  optima <- rbind(optima, c(date, sb, localizedSBs[[sb]]$optimum))
 }
+names(optima) <- c("date", "SB","lon","lat")
 
+plot(xy, las=1, xlab=NA, ylab=NA, bty="l", xlim=c(min(xy$lon)-500, max(xy$lon)+500),ylim=c(min(xy$lat)-500, max(xy$lat)+500), pch=20)
+points(as.numeric(optima$lon), as.numeric(optima$lat), pch=25)
+text(as.numeric(optima$lon), as.numeric(optima$lat), labels = optima$SB, pos = 1)
 
 ## Compare to field localizations for accuracy metrics:
 
