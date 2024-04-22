@@ -56,7 +56,7 @@ dets.long <- rbind(dets.B, dets.D, dets.VO)
 
 # take the cut column, subtract from start time, add the buffer
 dets.long$min.cut = ifelse(is.na(dets.long$min.cut), 2, dets.long$min.cut)
-dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=6) #6 for V, 4 for Bs and Ds
+dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=4) #6 for V, 4 for Bs and Ds
 
 # Cleaning particular to each night
 dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip))
@@ -87,9 +87,9 @@ len = 6 #make >7 if hoots are included, since it'll shift the others way back (h
 printwindow = 40
 
 # plot the consecutive chest beats of each individual over one another
-#pdf(paste0(format(Sys.time(), "%Y%m%d_%H%M%S"), "_consec.pdf"), width=12, height=8)
+pdf(paste0(format(Sys.time(), "%Y%m%d_%H%M%S"), "_consec.pdf"), width=12, height=8)
 plotConseq(dets)
-#dev.off()
+dev.off()
 plotConseq(dets)
 
 doyouhavemultplpamsperCB="NO"
