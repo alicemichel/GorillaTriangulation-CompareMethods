@@ -97,7 +97,7 @@ mergedClipsFromTimeGaps <- function(clip.start, inPAMfile, gaps, getPAM, clipLen
     difs <- all.clip.starts[inst] - fullTimeFromClipStart(kfls,0)
     rems[inst] <- m <- which(difs==min(difs[difs>0]))
     if (min(difs[difs>0])>3594.82){
-      stop(paste("On PAM", pam, "between files, so remove from dets for x-corr row number", inst))
+      stop(paste("On PAM", pam, "between files, so remove from dets for x-corr where c =",c,"row number", inst))
       rems[inst] <- m2 <- which(abs(difs)==min(abs(difs[difs!=difs[m]])))
     }
     fl <- kfls[rems[inst]]

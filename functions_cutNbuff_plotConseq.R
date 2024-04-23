@@ -16,7 +16,7 @@ plotConseq <- function(dets.ordered, start0=TRUE){
   
   dets <- dets.ordered
   
-  start.date <- substr(dets[1,]$sound.files, start = 4, stop = 11)
+  start.date <- substr(dets$sound.files, start = 4, stop = 11)
   inds=sort(unique(dets$ind))
   
   # plot the consecutive chest beats of each individual over one another
@@ -30,7 +30,7 @@ plotConseq <- function(dets.ordered, start0=TRUE){
   
   par(mfrow=c(2,1), mar=c(0,5,2,1), oma=c(4,0,0,0))
   
-  plot(dets[dets$ind==ind1,]$fullTimeFromClipStart, 1:nrow(dets[dets$ind==ind1,]), bty="l", pch=20, las=1, xaxt="n", xlab=NA, ylab="Cumulative # chest beats\nper individual", main=paste("Individuals chest beating on", start.date), xlim=c(min(dets$fullTimeFromClipStart)-1, max(dets$fullTimeFromClipStart)+1), ylim=c(0,max(table(dets$ind))))
+  plot(dets[dets$ind==ind1,]$fullTimeFromClipStart, 1:nrow(dets[dets$ind==ind1,]), bty="l", pch=20, las=1, xaxt="n", xlab=NA, ylab="Cumulative # chest beats\nper individual", main=paste("Individuals chest beating on", start.date[1]), xlim=c(min(dets$fullTimeFromClipStart)-1, max(dets$fullTimeFromClipStart)+1), ylim=c(0,max(table(dets$ind))))
   lines(dets[dets$ind==ind1,]$fullTimeFromClipStart, 1:nrow(dets[dets$ind==ind1,]))
   
   

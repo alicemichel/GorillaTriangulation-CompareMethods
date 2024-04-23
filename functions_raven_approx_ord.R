@@ -1,8 +1,9 @@
 
 
-approxOrd <- function(Raven.selections.path, clipLength = 7, buffer = 0, path=".", pams=rownames(pam.xy), num=nrow(df)) {
+approxOrd <- function(Raven.selections.path, clipLength = 7, buffer = 0, cutoff = 0, path=".", pams=rownames(pam.xy), num=nrow(df)) {
   
   dets <- read.table(Raven.selections.path, header = TRUE, sep = "\t")
+  dets <- dets[!(rownames(dets) %in% (0:cutoff)),]
   dets$start <- dets$File.Offset..s.
   dets$sound.files <- gsub(".*/","",dets$Begin.Path)
   dets$pam <- substr(dets$sound.files, start=1, stop=1)

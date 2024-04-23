@@ -1,12 +1,14 @@
 
-grabLaCieBAR <- function(date, times, lacienumber, destn){
+grabLaCieBAR <- function(date, times, lacienumber, destn, extend=TRUE){
   
   path = paste0("/Volumes/LaCie", lacienumber, "/")
-  times.for.weird <- c(times[1]-1, times, times[length(times)]+1)
+  if (extend==TRUE){
+    times <- c(times[1]-1, times, times[length(times)]+1)
+  }
   
   fls <- list.files(path, recursive = T, pattern=date)
   fls <- fls[!grepl("--",fls)]
-  searchcode <- paste0(date, "T", times.for.weird, collapse="|")
+  searchcode <- paste0(date, "T", times, collapse="|")
   flsIntime <- fls[grep(searchcode, fls)]
   flsIntimeWithLetter <- flsIntime[grepl("/[A-Z]/", flsIntime)]
   shortnames <- gsub(".*/", "", flsIntimeWithLetter)

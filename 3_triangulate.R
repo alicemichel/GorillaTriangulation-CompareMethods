@@ -83,7 +83,7 @@ for (sbi in 1:length(unique(lags[!is.na(lags$lag),]$IndID))){
   fieldLocs[ns[sbi],]$new.method.xcors <- list.files(pattern=".xlsx")[1]
   
 }
-fieldLocs[ns,]$office.notes <- "big time gap! not very careful xcor"
+fieldLocs[ns,]$office.notes <- "worse later though still <200m, either 2 individuals, bad xcor, or he is moving. at least 2 other individuals as well this night, one not far."
 #write.csv(fieldLocs, "../fieldTraingLocs.MethodsComparison.csv")
 
 
