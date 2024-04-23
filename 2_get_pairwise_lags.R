@@ -13,15 +13,15 @@ source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason
 CBs4raven <- CBs
 
 par(mfrow=c(4,1))
-check <- CBs[["D2"]]$detections
-check_spectro(check, rownames(check))
+check <- CBs[["D_17"]]$detections
+#check_spectro(check, rownames(check))
 
 # go back to the previous to remake the plot and CBs if this doesn't work but first try editting CBs
 
 
 ## 1. Export CBs4raven## 1. Export for Raven (or Python):
-ravenprep(CBs4raven, clipLength = 12, inds, detlim = c(10,NA,NA,NA,NA)) #12 for V, 6 for Ds and Bs
-#rm(list = ls())
+ravenprep(CBs4raven, clipLength = 6, inds) #, detlim = c(10,NA,NA,NA,NA)
+rm(list = ls())
 
 ## 2. Or, do cross-correlation in R:
 # lags <- xcorrlags(CBs, len, frq.lim = c(0.2, 0.7), wl = 2048, ovlp = 50)

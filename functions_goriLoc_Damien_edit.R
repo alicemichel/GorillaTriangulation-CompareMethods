@@ -93,40 +93,45 @@ goriLoc <- function(lagdf.IndID.PAM.lag, mic.coords.rownames.pams, xjump = 10, x
                         intersecs$x)
   intersecs <- intersecs[complete.cases(intersecs),]
   
-  # Format spatial for KDE:
-  coordinates(intersecs) <- c("x", "y")
-  kud <- kernelUD(intersecs[0], h="href")
-  kdr <- raster::raster(kud)
+  # set up plot:
   plot(x = range(xvals), y = yrange, type="n", main=paste(main, "- Individual", unique(lagdf.IndID.PAM.lag$IndID)), 
        las=1, xlab=NA, ylab=NA)
-  alPal <- colorRampPalette(c('white','grey80'))
-  plot(kdr, legend=FALSE, col=alPal(8), add=T)
+  
+  # Format spatial for KDE:
+  coordinates(intersecs) <- c("x", "y")
+  pos <- NA
+  if (length(intersecs)>=5){
+    kud <- kernelUD(intersecs[0], h="href")
+    kdr <- raster::raster(kud)
+    alPal <- colorRampPalette(c('white','grey80'))
+    plot(kdr, legend=FALSE, col=alPal(8), add=T)
+    idx = raster::which.max(kdr)
+    pos = raster::xyFromCell(kdr,idx)
+    legend("bottom", inset = 0.05, pch=8, legend=paste(round(pos,1), collapse=","), box.lwd = 0.5, col="blue")
+  }
   points(mic.coords.rownames.pams, pch = 20)
   text(mic.coords.rownames.pams, labels=rownames(mic.coords.rownames.pams), pos=1, cex=.75)
   points(pams.mic.coords.rownames.pams, col="blue", cex=2)
-  idx = raster::which.max(kdr)
-  pos = raster::xyFromCell(kdr,idx)
-  legend("bottom", inset = 0.05, pch=8, legend=paste(round(pos,1), collapse=","), box.lwd = 0.5, col="blue")
   
-  # keyPAM <- lagdf.IndID.PAM.lag[!is.na(lagdf.IndID.PAM.lag$lag) & lagdf.IndID.PAM.lag$lag==0,]$PAM
-  # pamCoords$dist2key <- distGorMic(pamCoords[pamCoords$PAM==keyPAM,2:3], pamCoords[,2:3])
-  # matr <- as.data.frame(as.matrix(colSums(sapply(pamcombos, function(v) replace(v, 1:3, pamCoords[rownames(pamCoords) %in% v,]$dist2key)))))
-  # 
-  # ## error if there is any NA in the spreadsheet!! or maybe also if it doesn't run... need to make list of all names regardless of whether it runs or not...
-  # 
-  # rownames(matr) <- intersecsdf$pams
-  # matr[,c("x","y")] <-intersecsdf[,c("x","y")]
-  # 
-  # ##   ##   ##   ##   ## 
-  # 
-  # alPal2 <- colorRampPalette(c('red','grey80'))
-  # matr$color <- alPal2(10)[as.numeric(cut(matr$V1,breaks = 10))]
-  # 
-  # points(matr[,c("x","y")], col=matr$color, pch=15, cex=1.2)
+  keyPAM <- lagdf.IndID.PAM.lag[!is.na(lagdf.IndID.PAM.lag$lag) & lagdf.IndID.PAM.lag$lag==0,]$PAM
+  intersecsdf$pam1x <- intersecsdf$pam1y <- intersecsdf$pam2x <- intersecsdf$pam2y <- intersecsdf$pam3x <- intersecsdf$pam3y <- NA
+  for (i in 1:nrow(intersecsdf)){
+    intersecsdf[i,]$pam1x <- pamCoords[pamCoords$PAM == substr(intersecsdf[i,]$pams, 1, 1),]$x
+    intersecsdf[i,]$pam1y <- pamCoords[pamCoords$PAM == substr(intersecsdf[i,]$pams, 1, 1),]$y
+    intersecsdf[i,]$pam2x <- pamCoords[pamCoords$PAM == substr(intersecsdf[i,]$pams, 2, 2),]$x
+    intersecsdf[i,]$pam2y <- pamCoords[pamCoords$PAM == substr(intersecsdf[i,]$pams, 2, 2),]$y
+    intersecsdf[i,]$pam3x <- pamCoords[pamCoords$PAM == substr(intersecsdf[i,]$pams, 3, 3),]$x
+    intersecsdf[i,]$pam3y <- pamCoords[pamCoords$PAM == substr(intersecsdf[i,]$pams, 3, 3),]$y
+  }
+  intersecsdf$pamsCntrX <- (intersecsdf$pam1x + intersecsdf$pam2x + intersecsdf$pam3x)/3
+  intersecsdf$pamsCntrY <- (intersecsdf$pam1y + intersecsdf$pam2y + intersecsdf$pam3y)/3
   
-  #points(intersecsdf[,c("x","y")], pch=0, cex=2)
-  points(intersecsdf[,c("x","y")], pch=20, col="pink")
-  #text(intersecsdf[,c("x","y")], labels=intersecsdf$pams, cex=0.3)
+  intersecsdf$dist2key <- distGorMic(pamCoords[pamCoords$PAM==keyPAM,2:3], data.frame(x=intersecsdf$pamsCntrX,y=intersecsdf$pamsCntrY))
+  alPal2 <- colorRampPalette(c('red','grey80'))
+  intersecsdf$color <- alPal2(10)[as.numeric(cut(intersecsdf$dist2key,breaks = 10))]
+  
+  points(intersecsdf[,c("x","y")], pch=15, cex=1.9, col=intersecsdf$color)
+  text(intersecsdf[,c("x","y")], labels=intersecsdf$pams, cex=0.4, col="white")
   
   points(pos, col="blue", pch=8, cex=2, lwd=3)
   

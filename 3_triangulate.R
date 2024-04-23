@@ -10,7 +10,7 @@ source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason
 # making the lags "real-time"
 # so, theoretically, with only those we should be able to triangulate...
 
-setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.21_20230116_individuals_B1_B2_D1_D2_V/")
+setwd("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/20230206_new_idea/2024.04.22_20230117_individuals_D17_D18_K17_K18_V17_V18/")
 (lags <- readxl::read_excel(list.files(pattern=".xlsx")))
 
 ## Set up for triangulation:
@@ -23,7 +23,7 @@ xy <- read.csv("../xy2.csv", row.names=1)[,1:2] #csv of all the pams locations w
 ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
 fieldLocs <- read.csv("../fieldTraingLocs.MethodsComparison.csv")
 #points(fieldLocs[,3])
-ns = 4
+ns = 5
 gorilla <- fieldLocs[ns,c("X","Y")] #the gorilla in question, near PAM J
 
 localizedSBs <- list()
@@ -48,13 +48,13 @@ text(as.numeric(optima$lon), as.numeric(optima$lat), labels = optima$SB, pos = 1
 ## Using this to check along with Raven correlations. The new method looks better! And is at least easier...
 fieldLocs <- read.csv("../fieldTraingLocs.MethodsComparison.csv")
 #points(fieldLocs[,3])
-ns = rep(4,5)
+ns = rep(5,6)
 for (sbi in 1:length(unique(lags[!is.na(lags$lag),]$IndID))){
   print(unique(lags[!is.na(lags$lag),]$IndID)[sbi])
   field.prec <- fieldLocs[ns[sbi],]$Precision.m
   gorilla <- fieldLocs[ns[sbi],c("X","Y")]
   dist2gorilla <- distGorMic(gorilla, localizedSBs[[sbi]]$intersection)
-  dist2gorillaOpt <- distGorMic(gorilla, localizedSBs[[sbi]]$optimum)
+  dist2gorillaOpt <- ifelse(!is.na(localizedSBs[[sbi]]$optimum), distGorMic(gorilla, localizedSBs[[sbi]]$optimum), NA)
   plot(dist2gorilla, xaxt="n", xlab=NA, ylim=c(0,50), bty="l", las=1, ylab="Distance to actually found nest site", main=unique(lags[!is.na(lags$lag),]$IndID)[sbi])
   axis(1, at = 1:length(dist2gorilla), labels = localizedSBs[[sbi]]$intersection$pams, las=2)
   cat("Starting with individual...", fieldLocs[ns[sbi],]$Nest.Site.ID, "\n")
@@ -83,7 +83,7 @@ for (sbi in 1:length(unique(lags[!is.na(lags$lag),]$IndID))){
   fieldLocs[ns[sbi],]$new.method.xcors <- list.files(pattern=".xlsx")[1]
   
 }
-fieldLocs[ns,]$office.notes <- "worse later though still <200m, either 2 individuals, bad xcor, or he is moving. at least 2 other individuals as well this night, one not far."
+fieldLocs[ns,]$office.notes <- "another near K and another near V (moving maybe or maybe 2)."
 #write.csv(fieldLocs, "../fieldTraingLocs.MethodsComparison.csv")
 
 
@@ -93,7 +93,7 @@ pams2check$time2gorilla <- pams2check$dist2gorilla/340
 pams2check$lagExp = pams2check$time2gorilla - min(pams2check$time2gorilla)
 pams2check
 
-fieldLocs <- fieldLocs[fieldLocs$X>0,]
+#fieldLocs <- fieldLocs[,-1]
 # pdf("../fieldlocs.pdf", width=10, height=7)
 par(mar=c(2,4,2,8))
 plot(xy, las=1, xlab=NA, ylab=NA, xlim=range(fieldLocs$X)+c(-100,100), ylim=range(fieldLocs$Y)+c(-100,100), col="grey20", pch=5, cex=1, main="Field-validated localizations to test new method accuracy")  
