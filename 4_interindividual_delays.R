@@ -31,9 +31,9 @@ ind2$full.start <- as.POSIXct(start.date, format = "%Y%m%d") + fullTimeFromClipS
 # Plot the chest beat timeline colored by individual:
 
 par(mfrow=c(4,1))
-#pdf("2024.04.07_20230206_individuals_J_U/timeline.pdf", width=12, height=3)
+#pdf("2024.04.07_20230206_individuals_J_U/timeline.pdf", width=10, height=3)
 plot(x=ind1$full.start, y=rep(1, length(ind1$full.start)), axes=F, pch="|", xlab=NA, ylab=NA, cex=3, main=as.Date(ind1$full.start[1]-86400))
-axis.POSIXct(side = 1, tick=F)
+axis.POSIXct(side = 1, tick=F, pos=0.8)
 abline(h=1)
 points(x=ind2$full.start, y=rep(1, length(ind2$full.start)), pch="|", col="red", cex=3)
 mtext(text = "Time gaps between chest beats from individuals J and U", cex=0.75)
