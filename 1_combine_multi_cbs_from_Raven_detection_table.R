@@ -33,12 +33,13 @@ par(mfrow=c(1,1))
 
 ## prep sound files to do detections in Raven on the best PAM(s) per individual (may need to iteratively run approxOrd function to figure out which that is)
 
-#relabelBARfiles(PAM="S")
-#grabLaCieBAR(date="S20230118", times=c("02","03"), lacienumber = 8, destn=".", extend=FALSE) #make sure you're in the right directory!
+#relabelBARfiles(PAM="K")
+#grabLaCieBAR(date="S20230121", times=17:22, lacienumber = 8, destn=".", extend=FALSE) #make sure you're in the right directory!
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-#dets.long <- approxOrd(Raven.selections.path = "20230117_K_V_D.txt", buffer=2, clipLength = 6, cutoff = 22)
+dets.long <- approxOrd(Raven.selections.path = "20230121_J_K_M_S.txt", buffer=2, clipLength = 6, cutoff = 81)
+
 
 #saveRDS(dets.long, "dets20240422.rds")
 dets.long <- readRDS("dets20240422.rds")
