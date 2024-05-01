@@ -38,7 +38,7 @@ par(mfrow=c(1,1))
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-dets.long <- approxOrd(Raven.selections.path = "20230121_J_K_M_S.txt", buffer=2, clipLength = 6, cutoff = 81)
+dets.long <- approxOrd(Raven.selections.path = "20230121_J_K_M_S.txt", buffer=2, clipLength = 6, cutoff = 96)
 
 
 #saveRDS(dets.long, "dets20240422.rds")
