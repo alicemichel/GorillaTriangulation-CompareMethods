@@ -46,7 +46,7 @@ timeline <- function(dets, pal = RColorBrewer::brewer.pal(5, "Set2"), pdf=TRUE){
 # 
 # Plot the chest beat timeline colored by individual:
 
-gaps <- function(dets,short,pal = RColorBrewer::brewer.pal(5, "Set2"), pdf=TRUE){
+gapsSim <- function(dets,short,pal = RColorBrewer::brewer.pal(5, "Set2"), pdf=TRUE){
   
   num_colors <- nlevels(as.factor(dets$indMoved))
   dets$colors <- pal[as.factor(dets$indMoved)]
@@ -181,7 +181,7 @@ simGapsListCBs <- function(night1,short,long,sign="neg"){
   # Plot the chest beat timeline colored by individual:
   
   par(mfrow=c(4,1))
-  pdf(paste0(start.date,"timeline", paste(names(night), collapse=""),".pdf"), width=10, height=3)
+  #pdf(paste0(start.date,"timeline", paste(names(night), collapse=""),".pdf"), width=10, height=3)
   namereps=do.call(c, lapply(full.starts.all, function(x) rep(1, length(x))))
   cols <- c("red","blue","turquoise","goldenrod","violet")[as.numeric(as.factor(substr(names(namereps), 1, 1)))]
   #RColorBrewer::brewer.pal(n = 5, name = "Set1")[as.numeric(as.factor(substr(names(namereps), 1, 1)))]
@@ -197,7 +197,7 @@ simGapsListCBs <- function(night1,short,long,sign="neg"){
   #mtext(text = paste(unique(substr(names(namereps), 1, 1)), collapse=", "), line = -1)
   #mtext(text = "and", line = -1)
   #mtext(text = paste("          ", unique(ind1$ind)), line = -1)
-  dev.off()
+  #dev.off()
   # Get overall first and last CB of all individuals that night:
   
   
@@ -215,6 +215,7 @@ simGapsListCBs <- function(night1,short,long,sign="neg"){
     indTgaps <- c(indTgaps, ind2[i,]$full.start - ind2[i-1,]$full.start)
     indTfrom1 <- c(indTfrom1, ind2[i,]$full.start - ind2[1,]$full.start)
   }
+  (mean.obs.gaps <- mean(abs.min.gaps.obs))
   
   # move by 1 second over the whole thing, starting from 0, ending when the first one is at the last end time and the rest loop around
   seclength <- round(as.numeric(cblast - cb1) * 60) #seconds
@@ -234,6 +235,22 @@ simGapsListCBs <- function(night1,short,long,sign="neg"){
   }
   names(gaps) <- paste0("CB",2:(length(gaps)+1))
   abs.gaps.sim <- abs(as.vector(unlist(gaps)))
+  mean.sim.gaps <- sort(rowMeans(abs(gaps)))
+  
+  par(mfrow=c(1,1))
+  hist(mean.sim.gaps, xlim=c(max(0, min(mean.obs.gaps, mean.sim.gaps)), max(c(mean.obs.gaps, mean.sim.gaps))), main=paste(unique(ind2$ind), "and", unique(ind1$ind)), xlab="Simulated inter-individual nearest chest beat time gaps (secs)", color="grey95", border="grey70")
+  abline(v=mean.obs.gaps, lty=4, col="red", lwd=2)
+  
+  pval <- rank(c(mean.obs.gaps, mean.sim.gaps))[1]/length(unique(rank(c(mean.obs.gaps, mean.sim.gaps))))
+  
+  tmp <- c(short, long, nrow(ind2), nrow(ind1), mean.obs.gaps, seclength, pval)
+  num <- rbind(num, tmp)
+}
+names(num) <- c("FocalInd", "BkgdInd", "num_cbs_focal", "num_cbs_bkgd", "mean_gap", "num_sims", "pval")
+return(num)
+
+
+  
   
   #simulate log-normal distribution with that mean and sd:
   par(mfrow=c(1,1))
@@ -254,7 +271,7 @@ simGapsListCBs <- function(night1,short,long,sign="neg"){
   hist(abs.gaps.sim, bty="l", las=1, breaks=20, #breaks = quantile(abs.gaps.sim, probs = c(0,0.01,seq(0.1,0.9,0.1),1)),
        xlab=setx, main=title)
   #or plot the gamma distribution:
-  pdf(paste0(start.date,"distributionSimGaps", unique(ind1$ind), unique(ind2$ind),".pdf"), width=8, height = 6)
+  #pdf(paste0(start.date,"distributionSimGaps", unique(ind1$ind), unique(ind2$ind),".pdf"), width=8, height = 6)
   plot(density(gamma.dens <- rgamma(n=3000,shape=gamma$estimate[1],rate=gamma$estimate[2]), from = 0), yaxs="i", xaxs="i",
        bty="l", xlab=setx, main=title,las=1, xlim=c(0,50), zero.line=FALSE, ylab="Gamma density of simulated values")
   #shade lower 99% CI gamma:
@@ -271,7 +288,7 @@ simGapsListCBs <- function(night1,short,long,sign="neg"){
   
   text(ci95gamma[1]+2, 0.005, labels=paste0("n=", length(which(abs.min.gaps.obs<ci95gamma[1])), "/",length(abs.min.gaps.obs)," of ", unique(ind2$ind), "'s chest beats are closer to ", unique(ind1$ind), "'s than \n<5% of the simulated inter-individual time gaps"), col="red", adj=0)
   
-  dev.off()
+  #dev.off()
 }
 
 

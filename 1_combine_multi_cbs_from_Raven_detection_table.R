@@ -10,6 +10,7 @@ source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_clock_drift.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_raven_approx_ord.R")
 source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_cutNbuff_plotConseq.R")
+source("~/Library/CloudStorage/Box-Box/AliceMichel/Research/Lac Tele/FieldSeason2/00 Analysis/Office Triangulation/CrossCorrMethodsComparison/functions_timeline_sim_ovlp.R")
 
 par(mfrow=c(1,1))
 
@@ -38,16 +39,28 @@ par(mfrow=c(1,1))
 
 pam.xy <- read.csv("xy2.csv", row.names=1)[,1:2]
 
-dets.long <- approxOrd(Raven.selections.path = "20230121_J_K_M_S.txt", buffer=2, clipLength = 6, cutoff = 96)
+#dets.long <- approxOrd(Raven.selections.path = "20230121_J_K_M_S.txt", buffer=2, clipLength = 6, cutoff = 82)
 
+dets.long <- data.frame()
+for (i in list.files(pattern = "ordering")){
+  dets.long <- rbind(dets.long, read.csv(i))
+}
+dets.long <- dets.long[!is.na(dets.long$approxOrd),]
+nrow(dets.long)==nrow(read.table("20230121_J_K_M_S.txt", header = T, sep = "\t"))
+#write.csv(dets.long, "ordered.csv")
 
-#saveRDS(dets.long, "dets20240422.rds")
-dets.long <- readRDS("dets20240422.rds")
+#saveRDS(dets.long, "dets20240429.rds")
+#dets.long <- readRDS("dets20240429.rds")
 rownames(dets.long) <- 1:nrow(dets.long)
-#par(mfrow=c(4,1))
-#check_spectro(dets.long, 1:nrow(dets.long))
 
+unique(dets.long$note)
+dets.long <- dets.long[!(dets.long$note %in% c("M tailll", "nothing", "not CB")),]
+dets.long$ind <- ifelse(dets.long$note %in% c("S light", "S hoot only unsure which S though", "S light hoot faint"), "S_far", dets.long$ind)
 unique(dets.long$ind)
+
+par(mfrow=c(4,1))
+#check_spectro(dets.long, rownames(dets.long[which(dets.long$ind=="V"),]))
+
 
 # take the cut column, subtract from start time, add the buffer
 #dets.long$min.cut = ifelse(is.na(dets.long$min.cut), 2, dets.long$min.cut)
@@ -55,9 +68,19 @@ dets.long$startClip <- cutNbuff(dets.long$start, dets.long$min.cut, buffer=2)
 
 # Cleaning particular to each night
 dets.long$check.full.st <- (fullTimeFromClipStart(sound.path = dets.long$sound.files, clip.start = dets.long$startClip))
-dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==dets.long$ind
+dets.long$check.ind <- substr(dets.long$sound.files, start=1, stop=1)==substr(dets.long$ind, start=1, stop=1)
+#write.csv(dets.long, "dets20240429.csv")
+dets.long <- read.csv("dets20240429.csv")
+dets.long <- dets.long[dets.long$remove!="rm",]
+dets.long <- dets.long[dets.long$remove!="not cb",]
 
-dets <- dets.long[dets.long$pam==dets.long$ind,]
+check_spectro(dets.long, rownames(dets.long[which(dets.long$remove=="weird"),]), clipLength = 8)
+
+
+dets <- dets.long
+#saveRDS(dets.long, "dets20240430.rds")
+
+dets <- readRDS("dets20240430.rds")
 
 # Convert clip start times to GPS time to correct for clock drift within each hour-long file:
 dets$startClip.GPS <- hz2GPStime(clipStart = dets$startClip, soundpath = dets$sound.files)
@@ -86,7 +109,22 @@ printwindow = 40
 # pdf(paste0(format(Sys.time(), "%Y%m%d_%H%M%S"), "_consec.pdf"), width=12, height=8)
 # plotConseq(dets)
 # dev.off()
-plotConseq(dets)
+dets$indMoved <- ifelse(dets$ind %in% c("M21", "K21"),"KM",dets$ind)
+plotConseq(dets, colors = as.numeric(as.factor(dets$indMoved)), pal = RColorBrewer::brewer.pal(5, "Set2"))
+timeline(dets, pdf=FALSE)
+lims <- data.frame()
+for (ind in unique(dets$indMoved)){
+  lims <- rbind(lims, range(dets[dets$indMoved==ind,]$check.full.st))
+}
+rownames(lims) <- unique(dets$indMoved); names(lims) <- c("min","max")
+lims$range = lims$max - lims$min
+lims[order(lims$min),]
+gaps <- data.frame()
+for (ind in unique(dets$indMoved)){
+  gaps <- rbind(gaps, gapsSim(dets, short=ind, pdf=FALSE))
+}
+
+
 
 doyouhavemultplpamsperCB="NO"
 
