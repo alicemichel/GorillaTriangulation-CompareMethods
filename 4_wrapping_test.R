@@ -47,6 +47,15 @@ abline(v=res[[1]], lty=4, col="red", lwd=2)
 text(res[[1]]+(max(res[[2]])-min(res[[2]]))/10, 140, labels=paste("p = ", round(pVal, 3)), col="red")
 
 
+wrap <- function(dat, fun=metricCalc, n=1000, shift=ind){
+  res <- randomization(dat, fun=metricCalc, n=1000, shift="J")
+  pVal <- mean(res[[2]]<res[[1]])
+  par(mfrow=c(1,1))
+  hist(res[[2]], main=paste(shift, "and", unique(dat$ind[dat$ind!=shift])), 
+       xlab="Mean adjacent chest beat time gap (secs)", col="grey95", border="grey70")
+  abline(v=res[[1]], lty=4, col="red", lwd=2)
+  text(res[[1]]+(max(res[[2]])-min(res[[2]]))/10, 140, labels=paste("p = ", round(pVal, 3)), col="red")
+}
 
 
 

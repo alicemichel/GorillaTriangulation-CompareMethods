@@ -17,7 +17,7 @@ timeline <- function(dets, pal = RColorBrewer::brewer.pal(5, "Set2"), pdf=TRUE){
   cb1 <- min(full.starts.all)
   cblast <- max(full.starts.all)
   
-  par(mfrow=c(4,1))
+  par(mfrow=c(2,1))
   if (pdf==TRUE){
     pdf(paste0(start.date,"timeline", paste(unique(dets$indMoved), collapse=""),".pdf"), width=12, height=3)
   }
@@ -28,7 +28,7 @@ timeline <- function(dets, pal = RColorBrewer::brewer.pal(5, "Set2"), pdf=TRUE){
   abline(h=1)
   #points(x=ind2$full.start, y=rep(1, length(ind2$full.start)), pch="|", col="red", cex=3)
   mtext(text = "Chest beats from individuals", cex=1)
-  legend("top", inset=-0.05, legend = unique(dets$indMoved), text.col = unique(colors), bty="n", horiz=TRUE, cex = 1)
+  legend("top", inset=-0.2, legend = unique(dets$indMoved), text.col = unique(colors), bty="n", horiz=TRUE, cex = 1, xpd=T)
   #mtext(text = paste(unique(substr(names(namereps), 1, 1)), collapse=", "), line = -1)
   #mtext(text = "and", line = -1)
   #mtext(text = paste("          ", unique(ind1$ind)), line = -1)
@@ -44,7 +44,6 @@ timeline <- function(dets, pal = RColorBrewer::brewer.pal(5, "Set2"), pdf=TRUE){
 # ind1$full.start <- as.POSIXct(start.date, format = "%Y%m%d") + fullTimeFromClipStart(sound.path = ind1$sound.files, clip.start = ind1$startClip.GPS)
 # ind2$full.start <- as.POSIXct(start.date, format = "%Y%m%d") + fullTimeFromClipStart(sound.path = ind2$sound.files, clip.start = ind2$startClip.GPS)
 # 
-# Plot the chest beat timeline colored by individual:
 
 gapsSim <- function(dets,short,pal = RColorBrewer::brewer.pal(5, "Set2"), pdf=TRUE){
   
@@ -245,81 +244,82 @@ simGapsListCBs <- function(night1,short,long,sign="neg"){
   
   tmp <- c(short, long, nrow(ind2), nrow(ind1), mean.obs.gaps, seclength, pval)
   num <- rbind(num, tmp)
-}
-names(num) <- c("FocalInd", "BkgdInd", "num_cbs_focal", "num_cbs_bkgd", "mean_gap", "num_sims", "pval")
-return(num)
-
-
-  
-  
-  #simulate log-normal distribution with that mean and sd:
-  par(mfrow=c(1,1))
-  plot(density(lnorm.dens <- rlnorm(n=3000,
-                                    meanlog=mean(log(abs.gaps.sim)),
-                                    sdlog=sd(log(abs.gaps.sim)))), bty="l", main="Log normal",las=1, xlim=c(0,50))
-  #simulate Gamma distribution with that shape and error:
-  gamma <- MASS::fitdistr(abs.gaps.sim, "Gamma")
-  plot(density(gamma.dens <- rgamma(n=3000,
-                                    shape=gamma$estimate[1],
-                                    rate=gamma$estimate[2])), bty="l", main="Gamma",las=1, xlim=c(0,50))
-  #calculate confidence intervals for each:
-  ci95gamma <- quantile(gamma.dens, probs = c(0.05,.95))
-  ci95lnorm <- quantile(lnorm.dens, probs = c(0.05,.95))
-  
-  #plot the simulated data:
-  title=paste(unique(ind2$ind), "shifted over", unique(ind1$ind)); setx="Minimum time between CBs of different individuals (minutes)"
-  hist(abs.gaps.sim, bty="l", las=1, breaks=20, #breaks = quantile(abs.gaps.sim, probs = c(0,0.01,seq(0.1,0.9,0.1),1)),
-       xlab=setx, main=title)
-  #or plot the gamma distribution:
-  #pdf(paste0(start.date,"distributionSimGaps", unique(ind1$ind), unique(ind2$ind),".pdf"), width=8, height = 6)
-  plot(density(gamma.dens <- rgamma(n=3000,shape=gamma$estimate[1],rate=gamma$estimate[2]), from = 0), yaxs="i", xaxs="i",
-       bty="l", xlab=setx, main=title,las=1, xlim=c(0,50), zero.line=FALSE, ylab="Gamma density of simulated values")
-  #shade lower 99% CI gamma:
-  abline(v=c(ci95gamma[1]-seq(ci95gamma[1],min(abs.gaps.sim),sign)), col=transp("lightblue",0.01),lwd=2)
-  #shade lower 99% CI log-normal:
-  # abline(v=c(ci95lnorm[1]-seq(ci95lnorm[1],min(abs.gaps.sim),-0.001)), col=transp("lightgreen",0.006),lwd=2)
-  #add lines for obs data:
-  abs.min.gaps.obs <- abs(as.numeric(minIIgaps)/60)
-  points(x=abs.min.gaps.obs, y=rep(0, length(minIIgaps)), col="red", pch=20, xpd=T)
-  
-  # what fraction are significantly replies:
-  length(which(abs.min.gaps.obs<ci95lnorm[1]))/length(abs.min.gaps.obs)
-  length(which(abs.min.gaps.obs<ci95gamma[1]))/length(abs.min.gaps.obs)
-  
-  text(ci95gamma[1]+2, 0.005, labels=paste0("n=", length(which(abs.min.gaps.obs<ci95gamma[1])), "/",length(abs.min.gaps.obs)," of ", unique(ind2$ind), "'s chest beats are closer to ", unique(ind1$ind), "'s than \n<5% of the simulated inter-individual time gaps"), col="red", adj=0)
-  
-  #dev.off()
+  names(num) <- c("FocalInd", "BkgdInd", "num_cbs_focal", "num_cbs_bkgd", "mean_gap", "num_sims", "pval")
+  return(num)
 }
 
 
 
-#  minIIgapsSim <- lapply(starts, function(x) min(abs(x[1] - ind2$full.start)))
-# for (i in 2:nrow(ind1)){
-#   minIIgapsSim <- lapply(starts, function(x) min(abs(x[i] - ind2$full.start)))
+#   
+#   
+#   #simulate log-normal distribution with that mean and sd:
+#   par(mfrow=c(1,1))
+#   plot(density(lnorm.dens <- rlnorm(n=3000,
+#                                     meanlog=mean(log(abs.gaps.sim)),
+#                                     sdlog=sd(log(abs.gaps.sim)))), bty="l", main="Log normal",las=1, xlim=c(0,50))
+#   #simulate Gamma distribution with that shape and error:
+#   gamma <- MASS::fitdistr(abs.gaps.sim, "Gamma")
+#   plot(density(gamma.dens <- rgamma(n=3000,
+#                                     shape=gamma$estimate[1],
+#                                     rate=gamma$estimate[2])), bty="l", main="Gamma",las=1, xlim=c(0,50))
+#   #calculate confidence intervals for each:
+#   ci95gamma <- quantile(gamma.dens, probs = c(0.05,.95))
+#   ci95lnorm <- quantile(lnorm.dens, probs = c(0.05,.95))
+#   
+#   #plot the simulated data:
+#   title=paste(unique(ind2$ind), "shifted over", unique(ind1$ind)); setx="Minimum time between CBs of different individuals (minutes)"
+#   hist(abs.gaps.sim, bty="l", las=1, breaks=20, #breaks = quantile(abs.gaps.sim, probs = c(0,0.01,seq(0.1,0.9,0.1),1)),
+#        xlab=setx, main=title)
+#   #or plot the gamma distribution:
+#   #pdf(paste0(start.date,"distributionSimGaps", unique(ind1$ind), unique(ind2$ind),".pdf"), width=8, height = 6)
+#   plot(density(gamma.dens <- rgamma(n=3000,shape=gamma$estimate[1],rate=gamma$estimate[2]), from = 0), yaxs="i", xaxs="i",
+#        bty="l", xlab=setx, main=title,las=1, xlim=c(0,50), zero.line=FALSE, ylab="Gamma density of simulated values")
+#   #shade lower 99% CI gamma:
+#   abline(v=c(ci95gamma[1]-seq(ci95gamma[1],min(abs.gaps.sim),sign)), col=transp("lightblue",0.01),lwd=2)
+#   #shade lower 99% CI log-normal:
+#   # abline(v=c(ci95lnorm[1]-seq(ci95lnorm[1],min(abs.gaps.sim),-0.001)), col=transp("lightgreen",0.006),lwd=2)
+#   #add lines for obs data:
+#   abs.min.gaps.obs <- abs(as.numeric(minIIgaps)/60)
+#   points(x=abs.min.gaps.obs, y=rep(0, length(minIIgaps)), col="red", pch=20, xpd=T)
+#   
+#   # what fraction are significantly replies:
+#   length(which(abs.min.gaps.obs<ci95lnorm[1]))/length(abs.min.gaps.obs)
+#   length(which(abs.min.gaps.obs<ci95gamma[1]))/length(abs.min.gaps.obs)
+#   
+#   text(ci95gamma[1]+2, 0.005, labels=paste0("n=", length(which(abs.min.gaps.obs<ci95gamma[1])), "/",length(abs.min.gaps.obs)," of ", unique(ind2$ind), "'s chest beats are closer to ", unique(ind1$ind), "'s than \n<5% of the simulated inter-individual time gaps"), col="red", adj=0)
+#   
+#   #dev.off()
 # }
 # 
-# # Check for within-individual escalation:
-# 
-# plot(1:length(indTgaps), indTgaps, las=1, xlab="Chest beat number", ylab="Time gap", bty="l", pch=20)
-# 
-# # Check for btwn-individual escalation:
-# 
-# plot(1:length(minIIgaps), minIIgaps, las=1, xlab="Chest beat number", ylab="Time gap", bty="l", pch=20)
 # 
 # 
-# 
-# plotConseq(rbind(night[[1]]$detections,night[[2]]$detections))
-# 
-# # but make it just a timeline
-# 
-# # compute the metric: nearest-neighbor inter-individual gaps (doesn't matter which individual? or just pairwise?)
-# 
-# # then find the start time and the end time of all chest beating
-# 
-# # then slide each around by 1 second randomly, if it gets to the end, loop it back to the beginning so it's not ordered which is weird for escalation but makes sense for this simulation
-# 
-# # compute the metric
-# 
-# # do that 1000 times
-# 
-# # plot them all, color the real ones - are they in the tail?
+# #  minIIgapsSim <- lapply(starts, function(x) min(abs(x[1] - ind2$full.start)))
+# # for (i in 2:nrow(ind1)){
+# #   minIIgapsSim <- lapply(starts, function(x) min(abs(x[i] - ind2$full.start)))
+# # }
+# # 
+# # # Check for within-individual escalation:
+# # 
+# # plot(1:length(indTgaps), indTgaps, las=1, xlab="Chest beat number", ylab="Time gap", bty="l", pch=20)
+# # 
+# # # Check for btwn-individual escalation:
+# # 
+# # plot(1:length(minIIgaps), minIIgaps, las=1, xlab="Chest beat number", ylab="Time gap", bty="l", pch=20)
+# # 
+# # 
+# # 
+# # plotConseq(rbind(night[[1]]$detections,night[[2]]$detections))
+# # 
+# # # but make it just a timeline
+# # 
+# # # compute the metric: nearest-neighbor inter-individual gaps (doesn't matter which individual? or just pairwise?)
+# # 
+# # # then find the start time and the end time of all chest beating
+# # 
+# # # then slide each around by 1 second randomly, if it gets to the end, loop it back to the beginning so it's not ordered which is weird for escalation but makes sense for this simulation
+# # 
+# # # compute the metric
+# # 
+# # # do that 1000 times
+# # 
+# # # plot them all, color the real ones - are they in the tail?
